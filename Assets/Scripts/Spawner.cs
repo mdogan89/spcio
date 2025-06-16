@@ -39,7 +39,7 @@ public class Spawner : MonoBehaviour
         }
     }
 
-    void SpawnFood()
+    public void SpawnFood()
     {
         for (int i = 0; i < numberOfFood; i++)
         {

@@ -82,12 +82,31 @@ public class Bot : MonoBehaviour
         }
         else
         {
-            int i = Random.Range(0, foodList.Count); // Get a random food position
-            target = foodList[i]; // Set the target to the random food position
-            hasTarget = true;
+            foodList = GetFoodList(); // Get the list of food positions again if the closest one is not valid
+            if (foodList.Count > 0 && foodList[0] != Vector3.zero)
+            {
+                target = foodList[0]; // Set the target to the closest food position
+                hasTarget = true;
+            }
+            else
+            {
+                GameObject.Find("Spawner").GetComponent<Spawner>().SpawnFood(); // Spawn food if no valid food positions are found
+                foodList = GetFoodList(); // Get the list of food positions again after spawning
+                if (foodList.Count == 0) return; // If still no food, exit
+                else if (foodList.Count > 0 && foodList[0] != Vector3.zero)
+                {
+                    target = foodList[0]; // If only one food position, set it as the target
+                    hasTarget = true;
+                }
+                else
+                {
+                    int i = Random.Range(0, foodList.Count); // Get a random food position
+                    target = foodList[i]; // Set the target to the closest food position
+                    hasTarget = true;
+                }
+            }
         }
     }
-
     List<Vector3> GetFoodList()
     {
         List<Vector3> foodList = GameObject.FindGameObjectsWithTag("Food")

@@ -5,7 +5,7 @@ using UnityEngine.InputSystem;
 public class Player : MonoBehaviour
 {
     public Rigidbody rb;
-    public float speedMult = 0.5f;
+    public float speedMult = 5f;
     [SerializeField] float speedMultAngle = 0.01f;
     float verticalMove;
     float horizontalMove;
@@ -25,6 +25,10 @@ public class Player : MonoBehaviour
     [SerializeField] TextMeshProUGUI scoreText;
     Bot bot;
     StarterAssetsInputs starterAssetsInputs;
+
+
+
+
     void Start()
     {
         cam = Camera.main;
@@ -125,6 +129,20 @@ public class Player : MonoBehaviour
         {
             Player collidedPlayer = collision.gameObject.GetComponent<Player>();
             //if(player.score == score)
+            var collidedBot = collidedPlayer.GetComponent<Bot>();
+            if(collidedBot == null)
+            {
+                if(score < collidedPlayer.score)
+                {
+                    AbsorbPlayer(collidedPlayer);
+                }
+                else if (score > collidedPlayer.score)
+                {
+                    GameManager gameManager = FindObjectOfType<GameManager>();
+                    gameManager.GameOver(collidedPlayer.score); // Trigger game over if the player is absorbed
+                }
+            }
+
             if (collidedPlayer != null && score > collidedPlayer.score)
             {
                 AbsorbPlayer(collidedPlayer);
@@ -162,6 +180,7 @@ public class Player : MonoBehaviour
         UpdateSize(); // Example of increasing size
         UpdateSpeed(); // Update speed based on new size
         UpdateCam(); // Update camera position based on new size
+        other.speedMult = 5f;
         other.transform.localScale = new Vector3(1, 1, 1); // Reset collided player's size
         other.GetComponent<Rigidbody>().MovePosition(Spawner.GetRandomPosition()); // Reset collided player's position
         Debug.Log("Collided with Bot! Score: " + score);
@@ -176,13 +195,13 @@ public class Player : MonoBehaviour
     /// </summary>
     private void UpdateSpeed()
     {
-        speedMult = (_Size / Mathf.Pow(_Size, 1.1f)) * 50;
+        speedMult = (_Size / Mathf.Pow(_Size, 1.1f)) * 5;
     }
 
     private void UpdateCam()
     {
-
-        cam.transform.localPosition = new Vector3(0, 0.5f + (_Size / 1000f), -(_Size / 1000f) * 2.5f);
+        //if(bot ==null)
+        //    cam.transform.localPosition = new Vector3(0, 0.5f + (_Size / 1000f), -(_Size / 1000f) * 2.5f);
 
     }
 
@@ -190,8 +209,4 @@ public class Player : MonoBehaviour
     {
         rb.MovePosition(Vector3.zero); // Reset position to the center of the map
     }
-
-
-
-
 }
