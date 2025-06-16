@@ -66,7 +66,7 @@ public class Bot : MonoBehaviour
     }
     void MoveToTarget()
     {
-        rb.AddForce((target - transform.position).normalized * GetComponent<Player>().speedMult, ForceMode.Force);
+        rb.AddForce((target - transform.position).normalized * GetComponent<Player>().speedMult, ForceMode.Impulse);
         if ((target - transform.position).magnitude < 1f)
             hasTarget = false;
     }

@@ -14,7 +14,7 @@ public class Player : MonoBehaviour
 
     Camera cam;
 
-
+   public Color _color = Color.white; // Default color
 
     public int score = 0;
     public int _Size = 1;
@@ -186,6 +186,10 @@ public class Player : MonoBehaviour
 
     }
 
+   public void OnJumpButtonClicked()
+    {
+        rb.MovePosition(Vector3.zero); // Reset position to the center of the map
+    }
 
 
 
