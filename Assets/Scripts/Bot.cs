@@ -8,6 +8,7 @@ public class Bot : MonoBehaviour
     Vector3 target = Vector3.zero;
     public bool hasTarget = false;
     Player botPlayer;
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -31,7 +32,27 @@ public class Bot : MonoBehaviour
     {
         SortedList<Vector3, int> sortedTargets = new SortedList<Vector3, int>(Comparer<Vector3>.Create((a, b) => a.magnitude.CompareTo(b.magnitude)));
 
-        foreach (Bot bot in Spawner.botList)
+        List<GameObject> targets = new List<GameObject>();
+
+        if (PlayerManager.Instance.botLevel == 1) {
+
+            targets = Spawner.playerList
+                .Where(player => player != null && player != GetComponent<Player>())
+                .Select(player => player.gameObject)
+                .ToList();
+        }
+        else if (PlayerManager.Instance.botLevel == 0)
+        {
+            targets = Spawner.botList
+                .Where(bot => bot != null && bot != GetComponent<Player>())
+                .Select(bot => bot.gameObject)
+                .ToList();
+        }
+        else if (PlayerManager.Instance.botLevel == 2)
+        {
+            targets.Add(GameObject.Find("Player").GetComponentInChildren<Player>().gameObject);
+        } 
+        foreach (var bot in targets)
         {
             if (bot == null || bot == GetComponent<Player>()) continue; // Skip if player is null
 

@@ -11,9 +11,12 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Title.unity
     guid: e8bcdc0a976b50f49b4cb192667ce949
+  - enabled: 0
+    path: Assets/Scenes/GameScene5.unity
+    guid: d8aab8cb554cb8149b7c2e530e8d4408
   - enabled: 1
     path: Assets/Scenes/GameScene.unity
-    guid: d8aab8cb554cb8149b7c2e530e8d4408
+    guid: e608bc204045fb84fa954d7700ffde8a
   m_configObjects:
     com.unity.adaptiveperformance.simulator.provider_settings: {fileID: 11400000, guid: 333fd3ec215c11d47ba8e55ce1d5052e, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

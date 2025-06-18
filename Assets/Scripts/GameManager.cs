@@ -30,6 +30,10 @@ public class GameManager : MonoBehaviour
     {
         // Logic to reset the game state and restart the game
         // This could involve resetting player scores, positions, and any other game state variables
+        gameOverCanvas.SetActive(false); // Hide the game over canvas
+        Spawner.botList.Clear(); // Clear the list of bots
+        Spawner.playerList.Clear(); // Clear the list of players
+
         UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
     }
 

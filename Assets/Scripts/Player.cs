@@ -26,12 +26,11 @@ public class Player : MonoBehaviour
     Bot bot;
     StarterAssetsInputs starterAssetsInputs;
 
-
+    public Camera _cam;
 
 
     void Start()
     {
-        cam = Camera.main;
 
 
 
@@ -44,9 +43,15 @@ public class Player : MonoBehaviour
         //{
         //    PlayerManager.Instance.nick = "Player" + Random.Range(1000, 9999); // Assign a default nickname if none is set
         //}
+        bot = GetComponent<Bot>();
+        if (bot == null)
+        {
+          //  starterAssetsInputs = GetComponent<StarterAssetsInputs>();
+            nick = PlayerManager.Instance.nick; // Get the player's nickname from PlayerManager
+            GetComponentInChildren<MeshRenderer>().material = PlayerManager.Instance.playerMaterial; // Set the player's material from PlayerManager
+        }
 
 
-        //nick = PlayerManager.Instance.nick; // Get the player's nickname from PlayerManager
 
         // Update the UI text elements with the player's nickname and score
         if (nickText != null)
@@ -58,33 +63,32 @@ public class Player : MonoBehaviour
             Debug.LogError("Nick Text UI element is not assigned.");
         }
 
-        bot = GetComponent<Bot>();
-        if (bot == null)
-        {
-            starterAssetsInputs = GetComponent<StarterAssetsInputs>();
-        }
+
+
+
+
     }
 
     private void Update()
     {
-        //verticalMove = InputSystem.actions["Move"].ReadValue<Vector2>().normalized.y;
-        //horizontalMove = InputSystem.actions["Move"].ReadValue<Vector2>().normalized.x;
-        //lookX = InputSystem.actions["Look"].ReadValue<Vector2>().normalized.x;
-        //lookY = InputSystem.actions["Look"].ReadValue<Vector2>().normalized.y;
+        verticalMove = InputSystem.actions["Move"].ReadValue<Vector2>().normalized.y;
+        horizontalMove = InputSystem.actions["Move"].ReadValue<Vector2>().normalized.x;
+        lookX = InputSystem.actions["Look"].ReadValue<Vector2>().normalized.x;
+        lookY = InputSystem.actions["Look"].ReadValue<Vector2>().normalized.y;
 
-        if (bot == null && starterAssetsInputs != null)
-        {
+        //if (bot == null && starterAssetsInputs != null)
+        //{
 
 
-            verticalMove = starterAssetsInputs.move.normalized.y;
-            horizontalMove = starterAssetsInputs.move.normalized.x;
-            lookX = starterAssetsInputs.look.normalized.x;
-            lookY = starterAssetsInputs.look.normalized.y;
-        }
-        else
-        {
-            //Debug.LogError("StarterAssetsInputs component not found on Player object.");
-        }
+        //    verticalMove = starterAssetsInputs.move.normalized.y;
+        //    horizontalMove = starterAssetsInputs.move.normalized.x;
+        //    lookX = starterAssetsInputs.look.normalized.x;
+        //    lookY = starterAssetsInputs.look.normalized.y;
+        //}
+        //else
+        //{
+        //    //Debug.LogError("StarterAssetsInputs component not found on Player object.");
+        //}
 
         // Update the score text UI element
         if (scoreText != null)
@@ -96,11 +100,24 @@ public class Player : MonoBehaviour
             Debug.LogError("Score Text UI element is not assigned.");
         }
 
+        if(bot == null)
+        {
+           // transform.rotation = Quaternion.Euler(lookY * 10, lookX * 10, 0); // Adjust camera rotation based on look input
+            //_cam.transform.rotation = Quaternion.Euler(lookY * 10, lookX * 10, 0); // Keep the camera rotation aligned with the player
+        }
+
+        if (_Size >= 2000)
+        {
+            _Size = 2000; // Cap the size to prevent excessive scaling
+        }
+
+
     }
 
 
     private void FixedUpdate()
-    {
+    {   
+       
         rb.AddForce(rb.transform.TransformDirection(Vector3.forward) * verticalMove * speedMult, ForceMode.Acceleration);
         rb.AddForce(rb.transform.TransformDirection(Vector3.right) * horizontalMove * speedMult, ForceMode.Acceleration);
 
@@ -201,7 +218,8 @@ public class Player : MonoBehaviour
     private void UpdateCam()
     {
         //if(bot ==null)
-        //    cam.transform.localPosition = new Vector3(0, 0.5f + (_Size / 1000f), -(_Size / 1000f) * 2.5f);
+           // cam.transform.localPosition = new Vector3(0, 0.5f + (_Size / 1000f), -(_Size / 1000f) * 2.5f);
+          // cam.fieldOfView = 60 + (_Size / 1000f) * 10; // Adjust the field of view based on size
 
     }
 

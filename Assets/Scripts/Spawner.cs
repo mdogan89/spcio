@@ -1,13 +1,14 @@
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 
 public class Spawner : MonoBehaviour
 {
     [SerializeField] Bot botPrefab;
-    [SerializeField] int numberOfBots = 20;
+    public static int numberOfBots = 20;
     [SerializeField] GameObject foodPrefab;
-    [SerializeField] int numberOfFood = 50;
+    public static int numberOfFood = 50;
     public static float spawnRadius = 40f;
     public static List<Bot> botList = new List<Bot>();
     Player player;
@@ -15,8 +16,33 @@ public class Spawner : MonoBehaviour
 
     [SerializeField] TextMeshProUGUI[] playerNamesText;
 
-    string[] playerNames = new string[20] { "Rick", "Morty", "Beth", "Jerry", "Summer", "Birdperson", "Mr. Poopybutthole", "Evil Morty", "Squanchy", "Tammy", "Unity", "Mr. Meeseeks", "Scary Terry", "Krombopulos Michael", "Gearhead", "Abradolf Lincler", "Noob-Noob", "Jessica", "Poopy Diaper", "Mr. Goldenfold" };
+    string[] playerNames = new string[0];
+    string[] playerNamesRickandMorty = new string[20] { "Rick", "Morty", "Beth", "Jerry", "Summer", "Birdperson", "Mr. Poopybutthole", "Evil Morty", "Squanchy", "Tammy", "Unity", "Mr. Meeseeks", "Scary Terry", "Krombopulos Michael", "Gearhead", "Abradolf Lincler", "Noob-Noob", "Jessica", "Poopy Diaper", "Mr. Goldenfold" };
+    string[] playerNamesBojack = new string[20] { "Bojack", "Diane", "Todd", "Princess Carolyn", "Mr. Peanutbutter", "Wanda", "Ruthie", "Sarah Lynn", "Vincent Adultman", "Emily", "Judah Mannowdog", "Lenny Turteltaub", "Cuddlywhiskers", "Charley Witherspoon", "Yoda", "Groot", "Darth Vader", "Obi-Wan Kenobi", "Leia Organa", "Han Solo" };
+    string[] playerNamesSimpsons = new string[20] { "Homer", "Marge", "Bart", "Lisa", "Maggie", "Mr. Burns", "Smithers", "Ned Flanders", "Apu", "Krusty", "Sideshow Bob", "Milhouse", "Ralph Wiggum", "Chief Wiggum", "Comic Book Guy", "Edna Krabappel", "Patty Bouvier", "Selma Bouvier", "Moe Szyslak", "Barney Gumble" };
+    string[] playerNamesFamilyGuy = new string[20] { "Peter", "Lois", "Stewie", "Brian", "Meg", "Chris", "Glenn Quagmire", "Cleveland Brown", "Joe Swanson", "Tom Tucker", "Angela", "Carter Pewterschmidt", "Mort Goldman", "Seamus", "Consuela", "Herbert", "Dr. Hartman", "Dr. Elmer Hartman", "Mayor Adam West", "Tricia Takanawa" };
+    string[] playerNamesSouthPark = new string[20] { "Stan", "Kyle", "Cartman", "Kenny", "Butters", "Randy", "Sheila", "Mr. Garrison", "Mr. Mackey", "Chef", "Timmy", "Towelie", "Wendy", "Bebe", "Token", "Craig", "Tweek", "PC Principal", "Mr. Hankey", "Satan" };
+    private void Awake()
+    {
+        // Ensure the static lists are cleared when the game starts
+        botList.Clear();
+        playerList.Clear();
 
+        playerNames = playerNames.Concat(playerNamesRickandMorty)
+            .Concat(playerNamesBojack)
+            .Concat(playerNamesSimpsons)
+            .Concat(playerNamesFamilyGuy)
+            .Concat(playerNamesSouthPark)
+            .ToArray();
+        //Shuffle the player names array
+        for (int i = 0; i < playerNames.Length; i++)
+        {
+            int randomIndex = Random.Range(i, playerNames.Length);
+            string temp = playerNames[i];
+            playerNames[i] = playerNames[randomIndex];
+            playerNames[randomIndex] = temp;
+        }
+    }
     void Start()
     {
         SpawnBots();
