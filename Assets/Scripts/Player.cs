@@ -29,6 +29,10 @@ public class Player : MonoBehaviour
     public Camera _cam;
 
 
+    public static float lookSensitivity = 1f; // Sensitivity for camera rotation
+    public static float moveSensitivity = 1f; // Sensitivity for movement
+
+
     void Start()
     {
 
@@ -118,11 +122,11 @@ public class Player : MonoBehaviour
     private void FixedUpdate()
     {   
        
-        rb.AddForce(rb.transform.TransformDirection(Vector3.forward) * verticalMove * speedMult, ForceMode.Acceleration);
-        rb.AddForce(rb.transform.TransformDirection(Vector3.right) * horizontalMove * speedMult, ForceMode.Acceleration);
+        rb.AddForce(rb.transform.TransformDirection(Vector3.forward) * verticalMove * speedMult * moveSensitivity, ForceMode.Acceleration);
+        rb.AddForce(rb.transform.TransformDirection(Vector3.right) * horizontalMove * speedMult * moveSensitivity, ForceMode.Acceleration);
 
-        rb.AddTorque(rb.transform.right * speedMultAngle * lookY * -1, ForceMode.Acceleration);
-        rb.AddTorque(rb.transform.up * speedMultAngle * lookX, ForceMode.Acceleration);
+        rb.AddTorque(rb.transform.right * speedMultAngle * lookY * -1 * lookSensitivity, ForceMode.Acceleration);
+        rb.AddTorque(rb.transform.up * speedMultAngle * lookX * lookSensitivity, ForceMode.Acceleration);
     }
 
 

@@ -2940,6 +2940,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gameOverCanvas: {fileID: 402952056}
+  cube: {fileID: 1702622220}
 --- !u!4 &1203495463
 Transform:
   m_ObjectHideFlags: 0
@@ -3742,11 +3743,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 287317552564024924, guid: 2f7f3dde7ae722a4aafffe20691ad702, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -1454
+      value: -1780
       objectReference: {fileID: 0}
     - target: {fileID: 287317552564024924, guid: 2f7f3dde7ae722a4aafffe20691ad702, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 475
+      value: 534
       objectReference: {fileID: 0}
     - target: {fileID: 597308369130767402, guid: 2f7f3dde7ae722a4aafffe20691ad702, type: 3}
       propertyPath: m_Pivot.x
@@ -3861,6 +3862,14 @@ PrefabInstance:
       value: Joysticks
       objectReference: {fileID: 0}
     - target: {fileID: 8160084292953347161, guid: 2f7f3dde7ae722a4aafffe20691ad702, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 330
+      objectReference: {fileID: 0}
+    - target: {fileID: 8160084292953347161, guid: 2f7f3dde7ae722a4aafffe20691ad702, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 330
+      objectReference: {fileID: 0}
+    - target: {fileID: 8160084292953347161, guid: 2f7f3dde7ae722a4aafffe20691ad702, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 155
       objectReference: {fileID: 0}
@@ -3930,7 +3939,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e9d677f1681015749b15c436eec6d880, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_MovementRange: 50
+  m_MovementRange: 100
   m_DynamicOriginRange: 100
   m_ControlPath: <Gamepad>/rightStick
   m_Behaviour: 0
@@ -3965,7 +3974,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e9d677f1681015749b15c436eec6d880, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_MovementRange: 50
+  m_MovementRange: 100
   m_DynamicOriginRange: 100
   m_ControlPath: <Gamepad>/leftStick
   m_Behaviour: 0

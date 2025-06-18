@@ -66,5 +66,32 @@ public class SettingsManager : MonoBehaviour
         //}
     }
 
+    public void OnLookSenstivitySelected(float sensitivity)
+    {
+        Player.lookSensitivity = sensitivity;
+    }
+
+    public void OnMoveSenstivitySelected(float sensitivity)
+    {
+        Player.moveSensitivity = sensitivity;
+    }
+
+    public void OnMapSelected(bool cube)
+    {
+        PlayerManager.Instance.isCube = cube;
+
+
+
+        //if (index >= 0 && index < mapMaterials.Length)
+        //{
+        //    Camera.main.GetComponent<Skybox>().material = mapMaterials[index];
+        //}
+        //else
+        //{
+        //    Debug.LogError("Invalid map index selected: " + index);
+        //}
+    }
+
+
 
 }
