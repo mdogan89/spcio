@@ -3,33 +3,9 @@ using UnityEngine;
 
 public class SettingsManager : MonoBehaviour
 {
-    public Material[] playerMaterials;
-    public Material[] mapMaterials;
-    Skybox skybox;
-    public void OnMoonSkinSelected(bool toggle) {
-        PlayerManager.Instance.playerMaterial = playerMaterials[0];
-    }
-
-    public void OnMarsSkinSelected(bool toggle)
-    {
-        PlayerManager.Instance.playerMaterial = playerMaterials[1];
-    }
-
-    public void OnBurntSkinSelected(bool toggle)
-    {
-        PlayerManager.Instance.playerMaterial = playerMaterials[2];
-    }
-
     public void OnSkinSelected(int index)
     {
-        if (index >= 0 && index < playerMaterials.Length)
-        {
-            PlayerManager.Instance.playerMaterial = playerMaterials[index];
-        }
-        else
-        {
-            Debug.LogError("Invalid skin index selected: " + index);
-        }
+        PlayerManager.Instance.skinId = index;
     }
 
     public void OnBotLevelSelected(int level)
@@ -54,16 +30,7 @@ public class SettingsManager : MonoBehaviour
 
     public void OnBrightnessSelected(float brightness)
     {
-        mapMaterials[0].SetFloat("_Exposure", brightness);
-        //skybox = Camera.main.GetComponent<Skybox>();
-        //if (skybox != null)
-        //{
-        //    skybox.material.SetFloat("exposure", brightness);
-        //}
-        //else
-        //{
-        //    Debug.LogError("Skybox component not found on the main camera.");
-        //}
+        Player.exposure = brightness;
     }
 
     public void OnLookSenstivitySelected(float sensitivity)
@@ -76,22 +43,12 @@ public class SettingsManager : MonoBehaviour
         Player.moveSensitivity = sensitivity;
     }
 
-    public void OnMapSelected(bool cube)
+    public void OnMapSelected(int mapId)
     {
-        PlayerManager.Instance.isCube = cube;
-
-
-
-        //if (index >= 0 && index < mapMaterials.Length)
-        //{
-        //    Camera.main.GetComponent<Skybox>().material = mapMaterials[index];
-        //}
-        //else
-        //{
-        //    Debug.LogError("Invalid map index selected: " + index);
-        //}
+        PlayerManager.Instance.mapId = mapId;
+        if(mapId ==1)
+        {
+            PlayerManager.Instance.isCube = true; // Set the player shape to cube for map 1
+        }
     }
-
-
-
 }

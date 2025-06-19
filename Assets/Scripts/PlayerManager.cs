@@ -7,10 +7,12 @@ public class PlayerManager : MonoBehaviour
     public static PlayerManager Instance { get; private set; }
     public string nick = "nick";
     [SerializeField] TMP_InputField nickInputField;
-    public Material playerMaterial;
+    public int skinId = 0; // Default skin ID
     [SerializeField] GameObject settingsPanel;
     [SerializeField] GameObject titlePanel;
     [SerializeField] TextMeshProUGUI highScoreText;
+
+    public int mapId = 0; // Default map ID
 
     public int botLevel = 0; // Default bot level
     public bool isCube = false; // Default player shape
@@ -27,8 +29,6 @@ public class PlayerManager : MonoBehaviour
         {
             Destroy(gameObject); // Ensure only one instance exists
         }
-        // Initialize player material if not set
-        playerMaterial = GetComponent<SettingsManager>().playerMaterials[0];
 
         // Load the player's nickname from PlayerPrefs if it exists
         if (PlayerPrefs.HasKey("PlayerNick"))

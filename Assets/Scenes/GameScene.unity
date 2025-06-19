@@ -2941,6 +2941,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameOverCanvas: {fileID: 402952056}
   cube: {fileID: 1702622220}
+  playerMaterials:
+  - {fileID: 2100000, guid: 5213a5ef58e5fac41a7889028eda09d2, type: 2}
+  - {fileID: 2100000, guid: 053fa0c86b03be449bd117d80d1eb19c, type: 2}
+  - {fileID: 2100000, guid: 2f563af0c76d67d4d9e07e2d4f83c8dd, type: 2}
+  mapMaterials:
+  - {fileID: 2100000, guid: f531e09e2ad2fb440b4eed7605863143, type: 2}
+  - {fileID: 2100000, guid: 119ec07f1c7ed204db46bd8465fd5a50, type: 2}
+  - {fileID: 2100000, guid: 5d133deeaa66ed445853e946ff25e073, type: 2}
 --- !u!4 &1203495463
 Transform:
   m_ObjectHideFlags: 0

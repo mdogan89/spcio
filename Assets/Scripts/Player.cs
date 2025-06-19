@@ -24,17 +24,20 @@ public class Player : MonoBehaviour
     [SerializeField] TextMeshProUGUI nickText;
     [SerializeField] TextMeshProUGUI scoreText;
     Bot bot;
-    StarterAssetsInputs starterAssetsInputs;
-
     public Camera _cam;
 
 
     public static float lookSensitivity = 1f; // Sensitivity for camera rotation
     public static float moveSensitivity = 1f; // Sensitivity for movement
 
+    public static float exposure = 3.0f; // Default exposure value for the skybox
 
     void Start()
     {
+
+       
+
+
 
 
 
@@ -43,16 +46,18 @@ public class Player : MonoBehaviour
             rb = GetComponent<Rigidbody>();
         }
 
-        //if(PlayerManager.Instance.nick == null || PlayerManager.Instance.nick == "")
-        //{
-        //    PlayerManager.Instance.nick = "Player" + Random.Range(1000, 9999); // Assign a default nickname if none is set
-        //}
         bot = GetComponent<Bot>();
         if (bot == null)
         {
           //  starterAssetsInputs = GetComponent<StarterAssetsInputs>();
+            if(PlayerManager.Instance.nick == null || PlayerManager.Instance.nick == "")
+            {
+                PlayerManager.Instance.nick = "Player" + Random.Range(1000, 9999); // Assign a default nickname if none is set
+                nick = PlayerManager.Instance.nick; // Set the player's nickname to the default
+            }
+            else { 
             nick = PlayerManager.Instance.nick; // Get the player's nickname from PlayerManager
-            GetComponentInChildren<MeshRenderer>().material = PlayerManager.Instance.playerMaterial; // Set the player's material from PlayerManager
+            }
         }
 
 
@@ -67,7 +72,7 @@ public class Player : MonoBehaviour
             Debug.LogError("Nick Text UI element is not assigned.");
         }
 
-
+        Camera.main.GetComponent<Skybox>().material.SetFloat("_Exposure", exposure); // Set the skybox exposure
 
 
 
