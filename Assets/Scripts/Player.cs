@@ -2,6 +2,7 @@ using StarterAssets;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 public class Player : MonoBehaviour
 {
     public Rigidbody rb;
@@ -34,8 +35,8 @@ public class Player : MonoBehaviour
 
     void Start()
     {
+ 
 
-       
 
 
 
@@ -72,32 +73,27 @@ public class Player : MonoBehaviour
             Debug.LogError("Nick Text UI element is not assigned.");
         }
 
-        Camera.main.GetComponent<Skybox>().material.SetFloat("_Exposure", exposure); // Set the skybox exposure
+        RenderSettings.skybox.SetFloat("_Exposure", exposure); // Set the skybox exposure for the scene
 
+        if (!PlayerManager.Instance.thirdPersonView)
+        {
+            
 
+            if(bot == null)
+            {
+                Camera.main.transform.position = Camera.main.transform.position + new Vector3(0, 0, 500f); // Adjust camera position for first-person view
+                GetComponentInChildren<Canvas>().GetComponent<Transform>().position = GetComponentInChildren<Canvas>().GetComponent<Transform>().position + new Vector3(0, 0, 1000); // Adjust canvas position for first-person view
+                scoreText.color = Color.white; // Set score text color to white for first-person view
+                nickText.color = Color.white; // Set nickname text color to white for first-person view
+            }
+        }
 
     }
 
     private void Update()
     {
-        verticalMove = InputSystem.actions["Move"].ReadValue<Vector2>().normalized.y;
-        horizontalMove = InputSystem.actions["Move"].ReadValue<Vector2>().normalized.x;
-        lookX = InputSystem.actions["Look"].ReadValue<Vector2>().normalized.x;
-        lookY = InputSystem.actions["Look"].ReadValue<Vector2>().normalized.y;
-
-        //if (bot == null && starterAssetsInputs != null)
-        //{
 
 
-        //    verticalMove = starterAssetsInputs.move.normalized.y;
-        //    horizontalMove = starterAssetsInputs.move.normalized.x;
-        //    lookX = starterAssetsInputs.look.normalized.x;
-        //    lookY = starterAssetsInputs.look.normalized.y;
-        //}
-        //else
-        //{
-        //    //Debug.LogError("StarterAssetsInputs component not found on Player object.");
-        //}
 
         // Update the score text UI element
         if (scoreText != null)
@@ -109,32 +105,36 @@ public class Player : MonoBehaviour
             Debug.LogError("Score Text UI element is not assigned.");
         }
 
-        if(bot == null)
-        {
-           // transform.rotation = Quaternion.Euler(lookY * 10, lookX * 10, 0); // Adjust camera rotation based on look input
-            //_cam.transform.rotation = Quaternion.Euler(lookY * 10, lookX * 10, 0); // Keep the camera rotation aligned with the player
-        }
-
         if (_Size >= 2000)
         {
             _Size = 2000; // Cap the size to prevent excessive scaling
         }
 
-
+        verticalMove = InputSystem.actions["Move"].ReadValue<Vector2>().normalized.y;
+        horizontalMove = InputSystem.actions["Move"].ReadValue<Vector2>().normalized.x;
+        lookX = InputSystem.actions["Look"].ReadValue<Vector2>().normalized.x;
+        lookY = InputSystem.actions["Look"].ReadValue<Vector2>().normalized.y;
     }
 
 
     private void FixedUpdate()
-    {   
-       
-        rb.AddForce(rb.transform.TransformDirection(Vector3.forward) * verticalMove * speedMult * moveSensitivity, ForceMode.Acceleration);
-        rb.AddForce(rb.transform.TransformDirection(Vector3.right) * horizontalMove * speedMult * moveSensitivity, ForceMode.Acceleration);
+    {
+        if (PlayerManager.Instance.easyControls)
+        {
+            //    Move Player based on input with rigidbody move position
+            Vector3 v = new Vector3(-lookY,lookX, 0f) * lookSensitivity * speedMultAngle *Time.fixedDeltaTime; // Create a vector for rotation based on look input
+            rb.MoveRotation(rb.rotation * Quaternion.Euler(v)); // Rotate the player based on look input
+            rb.MovePosition(rb.position + (transform.TransformDirection(new Vector3(horizontalMove, 0f, verticalMove)) * speedMult * moveSensitivity * Time.fixedDeltaTime)); // Move the player based on input
+        }
+        else
+        {
+            rb.AddForce(rb.transform.TransformDirection(Vector3.forward) * verticalMove * speedMult * moveSensitivity, ForceMode.Acceleration);
+            rb.AddForce(rb.transform.TransformDirection(Vector3.right) * horizontalMove * speedMult * moveSensitivity, ForceMode.Acceleration);
 
-        rb.AddTorque(rb.transform.right * speedMultAngle * lookY * -1 * lookSensitivity, ForceMode.Acceleration);
-        rb.AddTorque(rb.transform.up * speedMultAngle * lookX * lookSensitivity, ForceMode.Acceleration);
+            rb.AddTorque(rb.transform.right * speedMultAngle * lookY * -1 * lookSensitivity, ForceMode.Acceleration);
+            rb.AddTorque(rb.transform.up * speedMultAngle * lookX * lookSensitivity, ForceMode.Acceleration);
+        }
     }
-
-
 
     void OnTriggerEnter(Collider other)
     {
@@ -144,7 +144,6 @@ public class Player : MonoBehaviour
             if (food != null)
             {
                 eatFood(food);
-                UpdateSize(); // Update the size of the player
             }
         }
     }
@@ -156,11 +155,13 @@ public class Player : MonoBehaviour
             Player collidedPlayer = collision.gameObject.GetComponent<Player>();
             //if(player.score == score)
             var collidedBot = collidedPlayer.GetComponent<Bot>();
-            if(collidedBot == null)
+
+            // Bot collided with player
+            if (collidedBot == null)
             {
                 if(score < collidedPlayer.score)
                 {
-                    AbsorbPlayer(collidedPlayer);
+                    collidedPlayer.AbsorbPlayer(this);
                 }
                 else if (score > collidedPlayer.score)
                 {
@@ -168,10 +169,17 @@ public class Player : MonoBehaviour
                     gameManager.GameOver(collidedPlayer.score); // Trigger game over if the player is absorbed
                 }
             }
-
-            if (collidedPlayer != null && score > collidedPlayer.score)
+            // Bot collided with another bot
+            else if (collidedBot != null && bot != null)
             {
-                AbsorbPlayer(collidedPlayer);
+                if (score < collidedPlayer.score)
+                {
+                    collidedPlayer.AbsorbPlayer(this); // Absorb the player if the collided bot has a higher score
+                }
+                else if (score > collidedPlayer.score)
+                {
+                AbsorbPlayer(collidedPlayer); // Absorb the collided player if the player has a higher score
+                }
             }
         }
     }
@@ -236,4 +244,13 @@ public class Player : MonoBehaviour
     {
         rb.MovePosition(Vector3.zero); // Reset position to the center of the map
     }
+
+    public void OnMenuButtonClicked()
+    {
+        Destroy(GameObject.Find("PlayerManager")); // Destroy PlayerManager to reset player data
+        SceneManager.LoadScene("Title"); // Load the title scene when the menu button is clicked
+    }
+
+
+
 }

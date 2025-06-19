@@ -51,4 +51,17 @@ public class SettingsManager : MonoBehaviour
             PlayerManager.Instance.isCube = true; // Set the player shape to cube for map 1
         }
     }
+
+    public void OnEasyControlsClicked(bool isOn)
+    {
+        PlayerManager.Instance.easyControls = isOn;
+    }
+
+    public void OnCameraPosition(bool thirdPerson)
+    {
+        PlayerManager.Instance.thirdPersonView = thirdPerson;
+    }
+
+
+
 }

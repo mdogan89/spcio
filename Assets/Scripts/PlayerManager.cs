@@ -18,6 +18,17 @@ public class PlayerManager : MonoBehaviour
     public bool isCube = false; // Default player shape
 
     public int highScore = 0; // High score for the player
+
+    public bool easyControls = true; // Default control scheme
+
+    public bool thirdPersonView = true; // Default camera view
+
+    public string lastNick = "Nick";
+
+    public string hsNick = "Nick";
+
+
+
     void Awake()
     {
         if (Instance == null)
@@ -31,9 +42,10 @@ public class PlayerManager : MonoBehaviour
         }
 
         // Load the player's nickname from PlayerPrefs if it exists
-        if (PlayerPrefs.HasKey("PlayerNick"))
+        if (PlayerPrefs.HasKey("LastNick"))
         {
-            nick = PlayerPrefs.GetString("PlayerNick");
+            lastNick = PlayerPrefs.GetString("LastNick");
+            nick = lastNick; // Set the nickname to the last used nickname
             nickInputField.text = nick; // Set the input field text to the loaded nickname
         }
         else
@@ -41,15 +53,25 @@ public class PlayerManager : MonoBehaviour
             nick = "Player" + Random.Range(1000, 9999); // Assign a default nickname if none is set
         }
         // Load the high score from PlayerPrefs if it exists
-        if (PlayerPrefs.HasKey("HighScore"))
+
+        if (PlayerPrefs.HasKey("hsNick"))
         {
-            highScore = PlayerPrefs.GetInt("HighScore");
-            highScoreText.text = nick + " : " + highScore; // Update the high score text
+            hsNick = PlayerPrefs.GetString("hsNick");
+        }
+        else
+        {
+            hsNick = "Nick"; // Default high score nickname
+        }
+
+        if (PlayerPrefs.HasKey(hsNick))
+        {
+            highScore = PlayerPrefs.GetInt(hsNick);
+            highScoreText.text = hsNick + " : " + highScore; // Update the high score text
         }
         else
         {
             highScore = 0; // Default high score if none exists
-            highScoreText.text = nick + " : " + highScore;
+            highScoreText.text = hsNick + " : " + highScore;
         }
     }
 
@@ -64,8 +86,9 @@ public class PlayerManager : MonoBehaviour
     public void OnStartButtonClicked()
     {
         nick = nickInputField.text;
+        lastNick = nick;
         SceneManager.LoadScene("GameScene");
-        PlayerPrefs.SetString("PlayerNick", nick); // Save the player's nickname
+        PlayerPrefs.SetString("LastNick", lastNick); // Save the player's nickname
     }
 
     public void OnSettingsButtonClicked()

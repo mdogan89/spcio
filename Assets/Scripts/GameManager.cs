@@ -59,8 +59,9 @@ public class GameManager : MonoBehaviour
         {
             PlayerManager.Instance.highScore = score; // Update the high score in PlayerManager
                                                       // PlayerManager.Instance.highScoreText.text = PlayerManager.Instance.nick + " " + score; // Update the high score text in the UI
-            PlayerPrefs.SetString("PlayerNick", PlayerManager.Instance.nick); // Save the player's nickname to PlayerPrefs
+            PlayerPrefs.SetString("hsNick", PlayerManager.Instance.nick); // Save the player's nickname to PlayerPrefs
             PlayerPrefs.SetInt("HighScore", PlayerManager.Instance.highScore); // Save the high score to PlayerPrefs
+            PlayerPrefs.SetInt(PlayerManager.Instance.nick, score); // Save the score with the player's nickname as the key
         }
 
 

@@ -114,6 +114,7 @@ public class Spawner : MonoBehaviour
         {
             Bot bot = botList[i];
             bot.GetComponent<Player>().nick = playerNames[i]; // Assign a name from the array
+            bot.name = playerNames[i]; // Set the name of the GameObject
         }
     }
 
