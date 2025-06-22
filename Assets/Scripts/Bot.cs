@@ -44,7 +44,7 @@ public class Bot : MonoBehaviour
         else if (PlayerManager.Instance.botLevel == 0)
         {
             targets = Spawner.botList
-                .Where(bot => bot != null && bot != GetComponent<Player>())
+                .Where(bot => bot != null && bot != GetComponent<Bot>())
                 .Select(bot => bot.gameObject)
                 .ToList();
         }
@@ -54,7 +54,7 @@ public class Bot : MonoBehaviour
         } 
         foreach (var bot in targets)
         {
-            if (bot == null || bot == GetComponent<Player>()) continue; // Skip if player is null
+            if (bot == null || bot == GetComponent<Bot>()) continue; // Skip if player is null
 
             Vector3 botPosition = bot.transform.position;
             Vector3 directionToBot = (botPosition - transform.position).normalized;

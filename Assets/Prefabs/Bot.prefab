@@ -341,7 +341,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 10302, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -438,14 +438,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   rb: {fileID: 1060011890843104889}
   speedMult: 40
-  speedMultAngle: 0.01
   _color: {r: 1, g: 1, b: 1, a: 1}
   score: 0
   _Size: 1
   nick: nick
   nickText: {fileID: 318532848278947854}
   scoreText: {fileID: 3211199688459862059}
-  _cam: {fileID: 0}
 --- !u!1 &2386725816362791569
 GameObject:
   m_ObjectHideFlags: 0

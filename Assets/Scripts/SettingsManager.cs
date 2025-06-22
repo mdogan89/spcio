@@ -30,17 +30,17 @@ public class SettingsManager : MonoBehaviour
 
     public void OnBrightnessSelected(float brightness)
     {
-        Player.exposure = brightness;
+       LocalPlayer.exposure = brightness;
     }
 
     public void OnLookSenstivitySelected(float sensitivity)
     {
-        Player.lookSensitivity = sensitivity;
+        LocalPlayer.lookSensitivity = sensitivity;
     }
 
     public void OnMoveSenstivitySelected(float sensitivity)
     {
-        Player.moveSensitivity = sensitivity;
+        LocalPlayer.moveSensitivity = sensitivity;
     }
 
     public void OnMapSelected(int mapId)

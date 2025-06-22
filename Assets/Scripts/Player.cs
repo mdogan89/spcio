@@ -9,13 +9,6 @@ public class Player : MonoBehaviour
 {
     public Rigidbody rb;
     public float speedMult = 5f;
-    [SerializeField] float speedMultAngle = 0.01f;
-    float verticalMove;
-    float horizontalMove;
-    float lookX;
-    float lookY;
-
-    Camera cam;
 
    public Color _color = Color.white; // Default color
 
@@ -26,34 +19,10 @@ public class Player : MonoBehaviour
 
     [SerializeField] TextMeshProUGUI nickText;
     [SerializeField] TextMeshProUGUI scoreText;
-    GameObject fog; // Reference to the fog GameObject for enabling/disabling fog effects
     Bot bot;
-
-    public static float lookSensitivity = 1f; // Sensitivity for camera rotation
-    public static float moveSensitivity = 1f; // Sensitivity for movement
-
-    public static float exposure = 3.0f; // Default exposure value for the skybox
 
     void Start()
     {
-        fog = GameObject.Find("Fog"); // Find the fog GameObject in the scene
-         // Find the stars GameObject in the scene
-        if (bot == null) {
-
-            // Initialize the fog setting
-
-            ParticleSystem.ShapeModule shape = fog.GetComponent<ParticleSystem>().shape;
-        shape.scale = new Vector3(Spawner.spawnRadius, Spawner.spawnRadius, Spawner.spawnRadius); // Set the particle system shape scale based on spawn radius
-        fog.SetActive(PlayerManager.Instance.fogEnabled); // Set the fog active state based on the fogEnabled variable
-
-
-        }
-
-
-
-
-
-
         if (rb == null)
         {
             rb = GetComponent<Rigidbody>();
@@ -62,7 +31,6 @@ public class Player : MonoBehaviour
         bot = GetComponent<Bot>();
         if (bot == null)
         {
-          //  starterAssetsInputs = GetComponent<StarterAssetsInputs>();
             if(PlayerManager.Instance.nick == null || PlayerManager.Instance.nick == "")
             {
                 PlayerManager.Instance.nick = "Player" + Random.Range(1000, 9999); // Assign a default nickname if none is set
@@ -72,8 +40,6 @@ public class Player : MonoBehaviour
             nick = PlayerManager.Instance.nick; // Get the player's nickname from PlayerManager
             }
         }
-
-
 
         // Update the UI text elements with the player's nickname and score
         if (nickText != null)
@@ -85,7 +51,6 @@ public class Player : MonoBehaviour
             Debug.LogError("Nick Text UI element is not assigned.");
         }
 
-        RenderSettings.skybox.SetFloat("_Exposure", exposure); // Set the skybox exposure for the scene
 
         if (!PlayerManager.Instance.thirdPersonView)
         {
@@ -104,9 +69,6 @@ public class Player : MonoBehaviour
 
     private void Update()
     {
-
-
-
         // Update the score text UI element
         if (scoreText != null)
         {
@@ -120,37 +82,6 @@ public class Player : MonoBehaviour
         if (_Size >= 2000)
         {
             _Size = 2000; // Cap the size to prevent excessive scaling
-        }
-
-        verticalMove = InputSystem.actions["Move"].ReadValue<Vector2>().normalized.y;
-        horizontalMove = InputSystem.actions["Move"].ReadValue<Vector2>().normalized.x;
-        lookX = InputSystem.actions["Look"].ReadValue<Vector2>().normalized.x;
-        lookY = InputSystem.actions["Look"].ReadValue<Vector2>().normalized.y;
-    }
-
-
-    private void FixedUpdate()
-    {
-        if (PlayerManager.Instance.easyControls)
-        {
-            //    Move Player based on input with rigidbody move position
-            Vector3 v = new Vector3(-lookY,lookX, 0f) * lookSensitivity * speedMultAngle *Time.fixedDeltaTime; // Create a vector for rotation based on look input
-            rb.MoveRotation(rb.rotation * Quaternion.Euler(v)); // Rotate the player based on look input
-            rb.MovePosition(rb.position + (transform.TransformDirection(new Vector3(horizontalMove, 0f, verticalMove)) * speedMult * moveSensitivity * Time.fixedDeltaTime)); // Move the player based on input
-            GameManager gameManager = FindObjectOfType<GameManager>();
-            //// Update the map rotation based on player rotation
-
-            //float rotationY = rb.rotation.eulerAngles.y; // Get the player's rotation around the Y-axis
-            
-            //RenderSettings.skybox.SetFloat("_Rotation", rotationY); // Set the skybox rotation to match the player's rotation
-        }
-        else
-        {
-            rb.AddForce(rb.transform.TransformDirection(Vector3.forward) * verticalMove * speedMult * moveSensitivity, ForceMode.Acceleration);
-            rb.AddForce(rb.transform.TransformDirection(Vector3.right) * horizontalMove * speedMult * moveSensitivity, ForceMode.Acceleration);
-
-            rb.AddTorque(rb.transform.right * speedMultAngle * lookY * -1 * lookSensitivity, ForceMode.Acceleration);
-            rb.AddTorque(rb.transform.up * speedMultAngle * lookX * lookSensitivity, ForceMode.Acceleration);
         }
     }
 
@@ -208,8 +139,6 @@ public class Player : MonoBehaviour
         UpdateSize(); // Update the size of the player
         UpdateSpeed(); // Update speed based on new size
 
-        UpdateCam(); // Update camera position based on new size
-
         Vector3 position = Spawner.GetRandomPosition(); // Get a random position for the food
         food.transform.position = position; // Move food to a new random position
 
@@ -225,13 +154,19 @@ public class Player : MonoBehaviour
 
     void AbsorbPlayer(Player other)
     {
-        score += other.score / 10; // Example of increasing score --if other.score == 0 score += 10 
-        _Size += other._Size / 10; // Example of increasing size
+        if (other.score == 0)
+        {
+            score += 100;
+        }
+        else
+        {
+            score += other.score; // Example of increasing score --if other.score == 0 score += 10 
+        }
+        _Size += other._Size; // Example of increasing size
         other.score = 0; // Reset collided player's score
         other._Size = 1; // Reset collided player's size
         UpdateSize(); // Example of increasing size
         UpdateSpeed(); // Update speed based on new size
-        UpdateCam(); // Update camera position based on new size
         other.speedMult = 5f;
         other.transform.localScale = new Vector3(1, 1, 1); // Reset collided player's size
         other.GetComponent<Rigidbody>().MovePosition(Spawner.GetRandomPosition()); // Reset collided player's position
@@ -242,20 +177,10 @@ public class Player : MonoBehaviour
         if (bot != null)
             bot.hasTarget = false; // Reset target for the player bot
     }
-    /// <summary>
-    /// Oyuncunun hýzýný günceller.
-    /// </summary>
+
     private void UpdateSpeed()
     {
         speedMult = (_Size / Mathf.Pow(_Size, 1.1f)) * 5;
-    }
-
-    private void UpdateCam()
-    {
-        //if(bot ==null)
-           // cam.transform.localPosition = new Vector3(0, 0.5f + (_Size / 1000f), -(_Size / 1000f) * 2.5f);
-          // cam.fieldOfView = 60 + (_Size / 1000f) * 10; // Adjust the field of view based on size
-
     }
 
    public void OnJumpButtonClicked()

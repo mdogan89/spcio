@@ -1,7 +1,9 @@
 using NUnit.Framework;
 using System.Collections.Generic;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class GameManager : MonoBehaviour
 {
@@ -9,6 +11,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject cube;
     public Material[] playerMaterials;
     public Material[] mapMaterials;
+    GameObject fog; // Reference to the fog GameObject for enabling/disabling fog effects
 
 
     void Start()
@@ -48,11 +51,13 @@ public class GameManager : MonoBehaviour
         List<Material> playerMaterial = new List<Material>() { playerMaterials[PlayerManager.Instance.skinId] }; // Create a list to hold the map materials
         GameObject.Find("Player").GetComponent<MeshRenderer>().SetMaterials(playerMaterial); // Set the player's material based on the selected skin ID
 
-        
+        fog = GameObject.Find("Fog"); // Find the fog GameObject in the scene
+        // Initialize the fog setting
+            ParticleSystem.ShapeModule shape = fog.GetComponent<ParticleSystem>().shape;
+            shape.scale = new Vector3(Spawner.spawnRadius, Spawner.spawnRadius, Spawner.spawnRadius); // Set the particle system shape scale based on spawn radius
+            fog.SetActive(PlayerManager.Instance.fogEnabled); // Set the fog active state based on the fogEnabled variable
 
-
-
-    }
+        }
 
     // Update is called once per frame
     void Update()
