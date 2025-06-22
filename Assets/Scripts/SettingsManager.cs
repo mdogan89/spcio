@@ -46,10 +46,6 @@ public class SettingsManager : MonoBehaviour
     public void OnMapSelected(int mapId)
     {
         PlayerManager.Instance.mapId = mapId;
-        if(mapId ==1)
-        {
-            PlayerManager.Instance.isCube = true; // Set the player shape to cube for map 1
-        }
     }
 
     public void OnEasyControlsClicked(bool isOn)
@@ -60,6 +56,32 @@ public class SettingsManager : MonoBehaviour
     public void OnCameraPosition(bool thirdPerson)
     {
         PlayerManager.Instance.thirdPersonView = thirdPerson;
+    }
+
+    public void OnFogSelected(bool isOn)
+    {
+        //PlayerManager.Instance.fogEnabled = isOn;
+        //if (isOn)
+        //{
+        //    RenderSettings.fog = true;
+        //    RenderSettings.fogColor = Color.gray; // Set fog color to gray
+        //    RenderSettings.fogDensity = 0.05f; // Set fog density
+        //}
+        //else
+        //{
+        //    RenderSettings.fog = false;
+        //}
+        PlayerManager.Instance.fogEnabled = isOn;
+    }
+
+    public void OnTrailerSelected(bool isOn)
+    {
+        PlayerManager.Instance.trailerEnabled = isOn;
+    }
+
+    public void OnStarsSelected(bool isOn)
+    {
+        PlayerManager.Instance.starsEnabled = isOn;
     }
 
 

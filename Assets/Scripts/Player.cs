@@ -1,8 +1,10 @@
 using StarterAssets;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
+using static UnityEngine.Rendering.ProbeAdjustmentVolume;
 public class Player : MonoBehaviour
 {
     public Rigidbody rb;
@@ -24,9 +26,8 @@ public class Player : MonoBehaviour
 
     [SerializeField] TextMeshProUGUI nickText;
     [SerializeField] TextMeshProUGUI scoreText;
+    GameObject fog; // Reference to the fog GameObject for enabling/disabling fog effects
     Bot bot;
-    public Camera _cam;
-
 
     public static float lookSensitivity = 1f; // Sensitivity for camera rotation
     public static float moveSensitivity = 1f; // Sensitivity for movement
@@ -35,7 +36,18 @@ public class Player : MonoBehaviour
 
     void Start()
     {
- 
+        fog = GameObject.Find("Fog"); // Find the fog GameObject in the scene
+         // Find the stars GameObject in the scene
+        if (bot == null) {
+
+            // Initialize the fog setting
+
+            ParticleSystem.ShapeModule shape = fog.GetComponent<ParticleSystem>().shape;
+        shape.scale = new Vector3(Spawner.spawnRadius, Spawner.spawnRadius, Spawner.spawnRadius); // Set the particle system shape scale based on spawn radius
+        fog.SetActive(PlayerManager.Instance.fogEnabled); // Set the fog active state based on the fogEnabled variable
+
+
+        }
 
 
 
@@ -81,8 +93,8 @@ public class Player : MonoBehaviour
 
             if(bot == null)
             {
-                Camera.main.transform.position = Camera.main.transform.position + new Vector3(0, 0, 500f); // Adjust camera position for first-person view
-                GetComponentInChildren<Canvas>().GetComponent<Transform>().position = GetComponentInChildren<Canvas>().GetComponent<Transform>().position + new Vector3(0, 0, 1000); // Adjust canvas position for first-person view
+                Camera.main.transform.position = Camera.main.transform.position + new Vector3(0, 0, 3f); // Adjust camera position for first-person view
+                GetComponentInChildren<Canvas>().GetComponent<Transform>().position = GetComponentInChildren<Canvas>().GetComponent<Transform>().position + new Vector3(0, 0, 5); // Adjust canvas position for first-person view
                 scoreText.color = Color.white; // Set score text color to white for first-person view
                 nickText.color = Color.white; // Set nickname text color to white for first-person view
             }
@@ -125,6 +137,12 @@ public class Player : MonoBehaviour
             Vector3 v = new Vector3(-lookY,lookX, 0f) * lookSensitivity * speedMultAngle *Time.fixedDeltaTime; // Create a vector for rotation based on look input
             rb.MoveRotation(rb.rotation * Quaternion.Euler(v)); // Rotate the player based on look input
             rb.MovePosition(rb.position + (transform.TransformDirection(new Vector3(horizontalMove, 0f, verticalMove)) * speedMult * moveSensitivity * Time.fixedDeltaTime)); // Move the player based on input
+            GameManager gameManager = FindObjectOfType<GameManager>();
+            //// Update the map rotation based on player rotation
+
+            //float rotationY = rb.rotation.eulerAngles.y; // Get the player's rotation around the Y-axis
+            
+            //RenderSettings.skybox.SetFloat("_Rotation", rotationY); // Set the skybox rotation to match the player's rotation
         }
         else
         {

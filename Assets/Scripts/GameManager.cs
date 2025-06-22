@@ -13,6 +13,31 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        switch (PlayerManager.Instance.mapId)
+        {
+            case 0: // Space
+                RenderSettings.skybox = mapMaterials[0]; // Set the skybox material for the space map
+                PlayerManager.Instance.isCube = false; // Set the isCube flag to true for the cube map
+
+                break;
+            case 1: // Cube
+                RenderSettings.skybox = mapMaterials[0]; // Set the skybox material for the cube map
+                PlayerManager.Instance.isCube = true; // Set the isCube flag to true for the cube map
+                break;
+            case 2: // Ocean
+                RenderSettings.skybox = mapMaterials[1]; // Set the skybox material for the ocean map
+                PlayerManager.Instance.isCube = false; // Set the isCube flag to true for the cube map
+
+                break;
+            case 3: // Mars
+                RenderSettings.skybox = mapMaterials[2]; // Set the skybox material for the Mars map
+                PlayerManager.Instance.isCube = false; // Set the isCube flag to true for the cube map
+
+                break;
+            default:
+                Debug.LogError("Invalid map ID selected: " + PlayerManager.Instance.mapId);
+                break;
+        }
         cube.SetActive(PlayerManager.Instance.isCube); // Ensure the player object is active at the start of the game
         if (PlayerManager.Instance.isCube)
         {
@@ -23,24 +48,7 @@ public class GameManager : MonoBehaviour
         List<Material> playerMaterial = new List<Material>() { playerMaterials[PlayerManager.Instance.skinId] }; // Create a list to hold the map materials
         GameObject.Find("Player").GetComponent<MeshRenderer>().SetMaterials(playerMaterial); // Set the player's material based on the selected skin ID
 
-        switch (PlayerManager.Instance.mapId)
-        {
-            case 0: // Space
-                RenderSettings.skybox = mapMaterials[0]; // Set the skybox material for the space map
-                break;
-            case 1: // Cube
-                // RenderSettings.skybox = mapMaterials[0]; // Set the skybox material for the cube map
-                break;
-            case 2: // Ocean
-                RenderSettings.skybox = mapMaterials[1]; // Set the skybox material for the ocean map
-                break;
-            case 3: // Mars
-                RenderSettings.skybox = mapMaterials[2]; // Set the skybox material for the Mars map
-                break;
-            default:
-                Debug.LogError("Invalid map ID selected: " + PlayerManager.Instance.mapId);
-                break;
-        }
+        
 
 
 

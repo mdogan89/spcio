@@ -11,7 +11,6 @@ public class PlayerManager : MonoBehaviour
     [SerializeField] GameObject settingsPanel;
     [SerializeField] GameObject titlePanel;
     [SerializeField] TextMeshProUGUI highScoreText;
-
     public int mapId = 0; // Default map ID
 
     public int botLevel = 0; // Default bot level
@@ -27,7 +26,11 @@ public class PlayerManager : MonoBehaviour
 
     public string hsNick = "Nick";
 
+    public bool fogEnabled = true; // Default fog setting
 
+    public bool trailerEnabled = true; // Default trailer setting
+
+    public bool starsEnabled = true; // Default stars setting
 
     void Awake()
     {
