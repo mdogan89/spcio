@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.SocialPlatforms.Impl;
 using UnityEngine.UIElements;
 
 public class GameManager : MonoBehaviour
@@ -12,10 +13,13 @@ public class GameManager : MonoBehaviour
     public Material[] playerMaterials;
     public Material[] mapMaterials;
     GameObject fog; // Reference to the fog GameObject for enabling/disabling fog effects
-
-
+    float gameTimer = 180f; // Game timer set to 180 seconds (3 minutes)
+    [SerializeField]Canvas TimerCanvas; // Reference to the canvas displaying the timer
+    [SerializeField] TextMeshProUGUI timerText; // Reference to the text component displaying the timer
     void Start()
     {
+
+
         switch (PlayerManager.Instance.mapId)
         {
             case 0: // Space
@@ -62,7 +66,16 @@ public class GameManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        if (PlayerManager.Instance.gameMode == 2)
+        {
+            TimerCanvas.gameObject.SetActive(true); // Show the timer canvas if the game mode is 2 (time-based mode)
+            gameTimer -= Time.deltaTime; // Decrease the game timer
+            timerText.text = Mathf.CeilToInt(gameTimer).ToString(); // Update the timer text with the remaining time
+            if (gameTimer <= 0)
+            {
+                GameOver(GameObject.Find("Player").GetComponent<Player>().score); // Trigger game over when the timer reaches zero
+            }
+        }
     }
 
     public void GameOver(int score) {
@@ -80,8 +93,11 @@ public class GameManager : MonoBehaviour
 
     gameOverCanvas.gameObject.SetActive(true); // Show the game over canvas
     gameOverCanvas.GetComponentInChildren<TextMeshProUGUI>().text = "Game Over!\nYour Score: " + score; // Update the game over text with the player's score
-    GameObject.Find("Joysticks").SetActive(false); // Disable the player object
+    
+        GameObject joysticks = GameObject.Find("Joysticks"); // Find the Joysticks GameObject in the scene
 
+        if(joysticks != null && joysticks.active) // Check if the Joysticks GameObject exists and disable it
+            GameObject.Find("Joysticks").SetActive(false); // Disable the player object
 }
 
 

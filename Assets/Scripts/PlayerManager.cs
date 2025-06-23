@@ -32,6 +32,7 @@ public class PlayerManager : MonoBehaviour
 
     public bool starsEnabled = true; // Default stars setting
 
+    public int gameMode = 0; // Default game mode
     void Awake()
     {
         if (Instance == null)
@@ -84,6 +85,10 @@ public class PlayerManager : MonoBehaviour
         {
             nick = nickInputField.text; // Update the input field with the current nickname
         }
+        if(SceneManager.GetActiveScene().name == "Title")
+        {
+            RenderSettings.skybox.SetFloat("_Rotation", -Time.time * 0.3f); // Rotate the skybox over time in the title scene
+        }
     }
 
     public void OnStartButtonClicked()
@@ -106,7 +111,10 @@ public class PlayerManager : MonoBehaviour
         settingsPanel.SetActive(false);
     }
 
-
+    public void OnGameModeSelected(int mode)
+    {
+        gameMode = mode; // Set the selected game mode
+    }
 
 }
 

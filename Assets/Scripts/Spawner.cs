@@ -45,8 +45,10 @@ public class Spawner : MonoBehaviour
     }
     void Start()
     {
+        if(PlayerManager.Instance.gameMode != 3) { 
         SpawnBots();
         UpdateBotNames();
+        }
         SpawnFood();
         player = GameObject.Find("Player").GetComponentInChildren<Player>();
         playerList.Add(player);

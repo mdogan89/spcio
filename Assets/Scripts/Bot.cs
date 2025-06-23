@@ -70,6 +70,12 @@ public class Bot : MonoBehaviour
             }
         }
 
+        if(sortedTargets.Count == 0)
+        {
+            FindFood(); // If no targets found, find food
+            return;
+        }
+
         if (sortedTargets.ElementAt(0).Value == botPlayer.score)
         {
             FindFood();

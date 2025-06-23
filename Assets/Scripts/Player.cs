@@ -20,9 +20,13 @@ public class Player : MonoBehaviour
     [SerializeField] TextMeshProUGUI nickText;
     [SerializeField] TextMeshProUGUI scoreText;
     Bot bot;
+    Animator _animator;
+    GameManager gameManager;
 
     void Start()
     {
+        gameManager = FindObjectOfType<GameManager>();
+
         if (rb == null)
         {
             rb = GetComponent<Rigidbody>();
@@ -31,7 +35,10 @@ public class Player : MonoBehaviour
         bot = GetComponent<Bot>();
         if (bot == null)
         {
-            if(PlayerManager.Instance.nick == null || PlayerManager.Instance.nick == "")
+            _animator = GetComponent<Animator>();
+
+
+            if (PlayerManager.Instance.nick == null || PlayerManager.Instance.nick == "")
             {
                 PlayerManager.Instance.nick = "Player" + Random.Range(1000, 9999); // Assign a default nickname if none is set
                 nick = PlayerManager.Instance.nick; // Set the player's nickname to the default
@@ -69,6 +76,7 @@ public class Player : MonoBehaviour
 
     private void Update()
     {
+
         // Update the score text UI element
         if (scoreText != null)
         {
@@ -83,6 +91,15 @@ public class Player : MonoBehaviour
         {
             _Size = 2000; // Cap the size to prevent excessive scaling
         }
+        if(PlayerManager.Instance.gameMode == 1)
+        {
+            GameObject[] survivedBots = GameObject.FindGameObjectsWithTag("Bot");
+            if (survivedBots.Length == 0)
+            {
+                gameManager.GameOver(score); // Trigger game over if all bots are destroyed
+            }
+        }
+        
     }
 
     void OnTriggerEnter(Collider other)
@@ -114,7 +131,6 @@ public class Player : MonoBehaviour
                 }
                 else if (score > collidedPlayer.score)
                 {
-                    GameManager gameManager = FindObjectOfType<GameManager>();
                     gameManager.GameOver(collidedPlayer.score); // Trigger game over if the player is absorbed
                 }
             }
@@ -136,6 +152,8 @@ public class Player : MonoBehaviour
     {
         score += 100; // Increase score
         _Size += 12; // Increase size
+        if (bot == null)
+            _animator.SetTrigger("Eat"); // Trigger eating animation if not a bot
         UpdateSize(); // Update the size of the player
         UpdateSpeed(); // Update speed based on new size
 
@@ -160,22 +178,30 @@ public class Player : MonoBehaviour
         }
         else
         {
-            score += other.score; // Example of increasing score --if other.score == 0 score += 10 
+            score += other.score; // Example of increasing score
         }
         _Size += other._Size; // Example of increasing size
-        other.score = 0; // Reset collided player's score
-        other._Size = 1; // Reset collided player's size
         UpdateSize(); // Example of increasing size
         UpdateSpeed(); // Update speed based on new size
-        other.speedMult = 5f;
-        other.transform.localScale = new Vector3(1, 1, 1); // Reset collided player's size
-        other.GetComponent<Rigidbody>().MovePosition(Spawner.GetRandomPosition()); // Reset collided player's position
-        Debug.Log("Collided with Bot! Score: " + score);
-
-        if (other.GetComponent<Bot>() != null)
-            other.GetComponent<Bot>().hasTarget = false; // Reset target for the collided bot
+        if (PlayerManager.Instance.gameMode == 1)
+        {
+            Destroy(other.gameObject); // Destroy the other player if in survival mode
+        }
+        else
+        {
+            other.score = 0; // Reset collided player's score
+            other._Size = 1; // Reset collided player's size
+            other.speedMult = 5f;
+            other.transform.localScale = new Vector3(1, 1, 1); // Reset collided player's size
+            other.GetComponent<Rigidbody>().MovePosition(Spawner.GetRandomPosition()); // Reset collided player's position
+            if (other.GetComponent<Bot>() != null)
+                other.GetComponent<Bot>().hasTarget = false; // Reset target for the collided bot
+        }
         if (bot != null)
             bot.hasTarget = false; // Reset target for the player bot
+
+        if (bot == null)
+            _animator.SetTrigger("Eat"); // Trigger absorb animation if the player is absorbed
     }
 
     private void UpdateSpeed()
