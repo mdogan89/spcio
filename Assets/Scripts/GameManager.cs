@@ -1,10 +1,6 @@
-using NUnit.Framework;
 using System.Collections.Generic;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.SocialPlatforms.Impl;
-using UnityEngine.UIElements;
 
 public class GameManager : MonoBehaviour
 {
@@ -13,7 +9,7 @@ public class GameManager : MonoBehaviour
     public Material[] playerMaterials;
     public Material[] mapMaterials;
     GameObject fog; // Reference to the fog GameObject for enabling/disabling fog effects
-    float gameTimer = 180f; // Game timer set to 180 seconds (3 minutes)
+    float gameTimer = 60f; 
     [SerializeField]Canvas TimerCanvas; // Reference to the canvas displaying the timer
     [SerializeField] TextMeshProUGUI timerText; // Reference to the text component displaying the timer
     void Start()
@@ -73,8 +69,16 @@ public class GameManager : MonoBehaviour
             timerText.text = Mathf.CeilToInt(gameTimer).ToString(); // Update the timer text with the remaining time
             if (gameTimer <= 0)
             {
-                GameOver(GameObject.Find("Player").GetComponent<Player>().score); // Trigger game over when the timer reaches zero
-            }
+                int score = GameObject.Find("Player").GetComponent<Player>().score; // Get the player's score
+                // Find all bots in the scene and sort them by score
+                List<Bot> bots = Spawner.botList.FindAll(bot => bot != null); // Find all active bots in the scene
+                bots.Sort((a, b) => b.GetComponent<Player>().score.CompareTo(a.GetComponent<Player>().score)); // Sort bots by score in descending order
+                
+                GameOver(score); // Trigger game over when the timer reaches zero
+                if (score > bots[0].GetComponent<Player>().score)
+                {
+                    LocalPlayer.winner = true; // Set the winner flag for the local player if their score is higher than the highest bot score
+                }    }
         }
     }
 
@@ -92,7 +96,12 @@ public class GameManager : MonoBehaviour
 
 
     gameOverCanvas.gameObject.SetActive(true); // Show the game over canvas
-    gameOverCanvas.GetComponentInChildren<TextMeshProUGUI>().text = "Game Over!\nYour Score: " + score; // Update the game over text with the player's score
+        if(LocalPlayer.winner) // Check if the local player is the winner
+        {
+            gameOverCanvas.GetComponentInChildren<TextMeshProUGUI>().text = "You Win!\nYour Score: " + score; // Update the game over text with the player's score
+        }
+        else
+            gameOverCanvas.GetComponentInChildren<TextMeshProUGUI>().text = "Game Over!\nYour Score: " + score; // Update the game over text with the player's score
     
         GameObject joysticks = GameObject.Find("Joysticks"); // Find the Joysticks GameObject in the scene
 

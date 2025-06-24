@@ -1,10 +1,6 @@
-using StarterAssets;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
-using static UnityEngine.Rendering.ProbeAdjustmentVolume;
 public class Player : MonoBehaviour
 {
     public Rigidbody rb;
@@ -65,7 +61,7 @@ public class Player : MonoBehaviour
 
             if(bot == null)
             {
-                Camera.main.transform.position = Camera.main.transform.position + new Vector3(0, 0, 3f); // Adjust camera position for first-person view
+                Camera.main.transform.position = transform.position; // Adjust camera position for first-person view
                 GetComponentInChildren<Canvas>().GetComponent<Transform>().position = GetComponentInChildren<Canvas>().GetComponent<Transform>().position + new Vector3(0, 0, 5); // Adjust canvas position for first-person view
                 scoreText.color = Color.white; // Set score text color to white for first-person view
                 nickText.color = Color.white; // Set nickname text color to white for first-person view
@@ -90,6 +86,12 @@ public class Player : MonoBehaviour
         if (_Size >= 2000)
         {
             _Size = 2000; // Cap the size to prevent excessive scaling
+            if (bot == null)
+            {
+                gameManager.GameOver(score); // Trigger game over if the player exceeds the size limit
+                LocalPlayer.winner = true; // Set the winner flag for the local player
+            }
+
         }
         if(PlayerManager.Instance.gameMode == 1)
         {
@@ -97,6 +99,7 @@ public class Player : MonoBehaviour
             if (survivedBots.Length == 0)
             {
                 gameManager.GameOver(score); // Trigger game over if all bots are destroyed
+                LocalPlayer.winner = true; // Set the winner flag for the local player
             }
         }
         
@@ -164,7 +167,6 @@ public class Player : MonoBehaviour
             bot.hasTarget = false; // Reset target for the bot if it exists
 
     }
-
     void UpdateSize()
     {
         transform.localScale = Vector3.one + Vector3.one * 1000 * (_Size / 65535f);

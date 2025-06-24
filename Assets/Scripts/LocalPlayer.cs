@@ -13,10 +13,12 @@ public class LocalPlayer : MonoBehaviour
     [SerializeField] GameObject stars;
     Rigidbody rb;
 
-    public static float lookSensitivity = 1f; // Sensitivity for camera rotation
+    public static float lookSensitivity; // Sensitivity for camera rotation
     public static float moveSensitivity = 1f; // Sensitivity for movement
 
-    public static float exposure = 3.0f; // Default exposure value for the skybox
+    public float exposure; // Default exposure value for the skybox
+
+    public static bool winner = false; // Flag to indicate if the player is the winner
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -26,8 +28,9 @@ public class LocalPlayer : MonoBehaviour
         stars.SetActive(PlayerManager.Instance.starsEnabled); // Enable or disable stars based on stars setting
 
         rb = GetComponent<Rigidbody>();
-
+        exposure = PlayerManager.Instance.exposure; // Get the exposure value from PlayerManager
         RenderSettings.skybox.SetFloat("_Exposure", exposure); // Set the skybox exposure for the scene
+        lookSensitivity = PlayerManager.Instance.lookSensitivity; // Get the look sensitivity from PlayerManager
 
     }
 
@@ -69,8 +72,8 @@ public class LocalPlayer : MonoBehaviour
             rb.AddForce(rb.transform.TransformDirection(Vector3.forward) * verticalMove * speedMult * moveSensitivity, ForceMode.Acceleration);
             rb.AddForce(rb.transform.TransformDirection(Vector3.right) * horizontalMove * speedMult * moveSensitivity, ForceMode.Acceleration);
 
-            rb.AddTorque(rb.transform.right * speedMultAngle * lookY * -1 * lookSensitivity, ForceMode.Acceleration);
-            rb.AddTorque(rb.transform.up * speedMultAngle * lookX * lookSensitivity, ForceMode.Acceleration);
+            rb.AddTorque(rb.transform.right * speedMultAngle * lookY * -1 * lookSensitivity /50, ForceMode.Acceleration);
+            rb.AddTorque(rb.transform.up * speedMultAngle * lookX * lookSensitivity/50, ForceMode.Acceleration);
         }
     }
 }

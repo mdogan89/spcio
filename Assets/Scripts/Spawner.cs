@@ -6,10 +6,10 @@ using UnityEngine;
 public class Spawner : MonoBehaviour
 {
     [SerializeField] Bot botPrefab;
-    public static int numberOfBots = 20;
+    public int numberOfBots; // Default number of bots
     [SerializeField] GameObject foodPrefab;
-    public static int numberOfFood = 50;
-    public static float spawnRadius = 40f;
+    public int numberOfFood;
+    public static float spawnRadius;
     public static List<Bot> botList = new List<Bot>();
     Player player;
     public static List<Player> playerList = new List<Player>();
@@ -42,6 +42,17 @@ public class Spawner : MonoBehaviour
             playerNames[i] = playerNames[randomIndex];
             playerNames[randomIndex] = temp;
         }
+
+        if (PlayerManager.Instance == null)
+        {
+            Debug.LogError("PlayerManager instance is not found. Make sure it is initialized before Spawner.");
+            return;
+        }
+        // Load the number of bots and food from PlayerManager
+        numberOfBots = PlayerManager.Instance.numberOfBots;
+        numberOfFood = PlayerManager.Instance.numberOfFood;
+        spawnRadius = PlayerManager.Instance.spawnRadius;
+
     }
     void Start()
     {
