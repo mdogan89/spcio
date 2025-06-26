@@ -78,11 +78,18 @@ public class GameManager : MonoBehaviour
                 if (score > bots[0].GetComponent<Player>().score)
                 {
                     LocalPlayer.winner = true; // Set the winner flag for the local player if their score is higher than the highest bot score
-                }    }
+                }    
+            gameTimer = 0; // Reset the game timer to prevent further updates
+            }
         }
     }
 
     public void GameOver(int score) {
+
+      //  InterstitialAdSample adSample = GameObject.Find("InterstitialAdSample").GetComponent<InterstitialAdSample>(); // Find the InterstitialAdSample component in the scene
+        //adSample.ShowInterstitialAd(); // Show an interstitial ad when the game is over
+
+
 
         if (score > PlayerManager.Instance.highScore) // Check if the current score is greater than the high score
 
@@ -107,7 +114,9 @@ public class GameManager : MonoBehaviour
 
         if(joysticks != null && joysticks.active) // Check if the Joysticks GameObject exists and disable it
             GameObject.Find("Joysticks").SetActive(false); // Disable the player object
-}
+
+        GameObject.Find("Player").GetComponent<Player>().score = 0; // Disable the player's collider to prevent further interactions
+    }
 
 
 

@@ -164,7 +164,7 @@ public class PlayerManager : MonoBehaviour
         }
         else
         {
-            numberOfBots = 20; // Default number of bots
+            numberOfBots = 50; // Default number of bots
         }
         if (PlayerPrefs.HasKey("NumberOfFood"))
         {
@@ -180,7 +180,7 @@ public class PlayerManager : MonoBehaviour
         }
         else
         {
-            spawnRadius = 40f; // Default spawn radius
+            spawnRadius = 50f; // Default spawn radius
         }
         if (PlayerPrefs.HasKey("ThirdPersonView"))
         {

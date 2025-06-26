@@ -136,4 +136,25 @@ public class SettingsManager : MonoBehaviour
         lookSensitivitySlider.value = PlayerManager.Instance.lookSensitivity; // Set the look sensitivity slider value based on saved value
         moveSensitivitySlider.value = PlayerManager.Instance.moveSensitivity; // Set the move sensitivity slider value based on saved value
     }
+
+    public void OnDefaultsButtonClicked()
+    {
+        skinToggleGroup.GetComponentInChildren<Transform>().Find($"SkinToggle{0}").GetComponent<Toggle>().isOn = true;
+        mapToggleGroup.GetComponentsInChildren<Toggle>()[0].isOn = true; // Set the selected map toggle based on saved map ID    
+        botLevelToggleGroup.GetComponentsInChildren<Toggle>()[0].isOn = true; // Set the selected bot level toggle based on saved bot level
+        playerNumberSlider.value = 50; // Set the slider value for number of bots based on saved value
+        foodNumberSlider.value = 50; // Set the slider value for number of food items based on saved value
+        spawnRadiusSlider.value = 50; // Set the slider value for spawn radius based on saved value
+        thirdPersonViewToggle.isOn = true; // Set the toggle for third-person view based on saved setting
+        fogToggle.isOn = true; // Set the toggle for fog based on saved setting
+        trailerToggle.isOn = true; // Set the toggle for trailer based on saved setting
+        starsToggle.isOn = true; // Set the toggle for stars based on saved setting
+        easyControlsToggle.isOn = true; // Set the toggle for easy controls based on saved setting
+        brightnessSlider.value = 3.0f; // Set the brightness slider value based on saved exposure value
+        lookSensitivitySlider.value = 1.0f; // Set the look sensitivity slider value based on saved value
+        moveSensitivitySlider.value = 1.0f; // Set the move sensitivity slider value based on saved value
+    }
+
+
+
 }

@@ -37,6 +37,22 @@ public class LocalPlayer : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        //Vector3 offset = new Vector3(0, 0, -10f);
+
+        //Camera.main.transform.SetPositionAndRotation(transform.position + offset, transform.rotation);
+
+
+        //float aspectRatio = Camera.main.aspect;
+        //float orthoSize = (transform.localScale.x + 7) / aspectRatio;
+
+        //Camera.main.orthographicSize = Mathf.Lerp(Camera.main.orthographicSize, orthoSize, Time.deltaTime * 0.1f);
+        // Camera.main.transform.position = Vector3.Lerp(Camera.main.transform.position, new Vector3(transform.position.x, transform.position.y, transform.position.z-10), Time.deltaTime);
+        //Camera.main.transform.eulerAngles = transform.eulerAngles; // Set camera rotation to match player rotation
+        //float speed = 1f; // Speed for lerping camera position
+        //Vector3 rotationLerp = Vector3.Lerp(Camera.main.transform.eulerAngles, transform.eulerAngles,speed * Time.deltaTime);
+        //Camera.main.transform.eulerAngles = rotationLerp;
+
+
         verticalMove = InputSystem.actions["Move"].ReadValue<Vector2>().normalized.y;
         horizontalMove = InputSystem.actions["Move"].ReadValue<Vector2>().normalized.x;
         lookX = InputSystem.actions["Look"].ReadValue<Vector2>().normalized.x;
@@ -51,6 +67,7 @@ public class LocalPlayer : MonoBehaviour
         {
             _particleSystem.Stop(); // Stop particle system when not moving
         }
+        _particleSystem.startSize = transform.localScale.x/3;
     }
     private void FixedUpdate()
     {
@@ -59,13 +76,16 @@ public class LocalPlayer : MonoBehaviour
             //    Move Player based on input with rigidbody move position
             Vector3 v = new Vector3(-lookY, lookX, 0f) * lookSensitivity * speedMultAngle * Time.fixedDeltaTime; // Create a vector for rotation based on look input
             rb.MoveRotation(rb.rotation * Quaternion.Euler(v)); // Rotate the player based on look input **rb needed?
-            rb.MovePosition(rb.position + (transform.TransformDirection(new Vector3(horizontalMove, 0f, verticalMove)) * speedMult * moveSensitivity * Time.fixedDeltaTime)); // Move the player based on input
-            GameManager gameManager = FindObjectOfType<GameManager>();
-            //// Update the map rotation based on player rotation
+            rb.MovePosition(rb.position + (transform.TransformDirection(new Vector3(horizontalMove, 0f, verticalMove)) * GetComponent<Player>().speedMult * moveSensitivity * Time.fixedDeltaTime)); // Move the player based on input
+            //GameManager gameManager = FindObjectOfType<GameManager>();
+            ////// Update the map rotation based on player rotation
 
-            //float rotationY = rb.rotation.eulerAngles.y; // Get the player's rotation around the Y-axis
+            ////float rotationY = rb.rotation.eulerAngles.y; // Get the player's rotation around the Y-axis
 
-            //RenderSettings.skybox.SetFloat("_Rotation", rotationY); // Set the skybox rotation to match the player's rotation
+            ////RenderSettings.skybox.SetFloat("_Rotation", rotationY); // Set the skybox rotation to match the player's rotation
+            /////Moving player with transform. Translate?
+            //transform.Rotate(-lookY * lookSensitivity * speedMultAngle, lookX * lookSensitivity * speedMultAngle, 0f, Space.Self); // Rotate the player based on look input
+            //transform.position += (transform.TransformDirection(new Vector3(horizontalMove, 0f, verticalMove)) * speedMult * moveSensitivity * Time.fixedDeltaTime); // Move the player based on input
         }
         else
         {

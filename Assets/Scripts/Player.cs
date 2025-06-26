@@ -65,6 +65,7 @@ public class Player : MonoBehaviour
                 GetComponentInChildren<Canvas>().GetComponent<Transform>().position = GetComponentInChildren<Canvas>().GetComponent<Transform>().position + new Vector3(0, 0, 5); // Adjust canvas position for first-person view
                 scoreText.color = Color.white; // Set score text color to white for first-person view
                 nickText.color = Color.white; // Set nickname text color to white for first-person view
+                PlayerManager.Instance.trailerEnabled = false; // Disable trailer effect for first-person view
             }
         }
 
@@ -83,13 +84,13 @@ public class Player : MonoBehaviour
             Debug.LogError("Score Text UI element is not assigned.");
         }
 
-        if (_Size >= 2000)
+        if (_Size >= 2000) // game mode?
         {
             _Size = 2000; // Cap the size to prevent excessive scaling
             if (bot == null)
             {
-                gameManager.GameOver(score); // Trigger game over if the player exceeds the size limit
                 LocalPlayer.winner = true; // Set the winner flag for the local player
+                gameManager.GameOver(score); // Trigger game over if the player exceeds the size limit
             }
 
         }
@@ -98,8 +99,9 @@ public class Player : MonoBehaviour
             GameObject[] survivedBots = GameObject.FindGameObjectsWithTag("Bot");
             if (survivedBots.Length == 0)
             {
-                gameManager.GameOver(score); // Trigger game over if all bots are destroyed
                 LocalPlayer.winner = true; // Set the winner flag for the local player
+                gameManager.GameOver(score); // Trigger game over if all bots are destroyed
+                
             }
         }
         
@@ -176,7 +178,7 @@ public class Player : MonoBehaviour
     {
         if (other.score == 0)
         {
-            score += 100;
+            score += 50;
         }
         else
         {
@@ -188,6 +190,8 @@ public class Player : MonoBehaviour
         if (PlayerManager.Instance.gameMode == 1)
         {
             Destroy(other.gameObject); // Destroy the other player if in survival mode
+            Spawner.botList.Remove(other.GetComponent<Bot>()); // Remove the absorbed bot from the bot list
+            Spawner.playerList.Remove(other); // Remove the absorbed player from the player list
         }
         else
         {
