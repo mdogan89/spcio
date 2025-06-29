@@ -15,7 +15,7 @@ public class Bot : MonoBehaviour
         botPlayer = GetComponent<Player>();
     }
 
-    void Update()
+    void FixedUpdate()
     {
         if (!hasTarget)
         {
@@ -37,15 +37,19 @@ public class Bot : MonoBehaviour
         else if (PlayerManager.Instance.botLevel == 0)
             targets = Spawner.botList.Where(b => b != null && b != this).Select(b => b.gameObject).ToList();
         else if (PlayerManager.Instance.botLevel == 2)
-            targets.Add(GameObject.Find("Player").GetComponentInChildren<Player>().gameObject);
+            if (GameObject.FindAnyObjectByType<LocalPlayer>() != null)
+                targets.Add(GameObject.FindAnyObjectByType<LocalPlayer>().GetComponent<Player>().gameObject);
+            else
+                targets = Spawner.botList.Where(b => b != null && b != this).Select(b => b.gameObject).ToList();
+
 
         foreach (var t in targets)
-        {
-            if (t == null) continue;
-            float dist = Vector3.Distance(transform.position, t.transform.position);
-            int score = t.GetComponent<Player>().score;
-            candidates.Add((t, dist, score));
-        }
+                {
+                    if (t == null) continue;
+                    float dist = Vector3.Distance(transform.position, t.transform.position);
+                    int score = t.GetComponent<Player>().score;
+                    candidates.Add((t, dist, score));
+                }
 
         if (candidates.Count == 0)
         {

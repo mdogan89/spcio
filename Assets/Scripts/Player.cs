@@ -1,12 +1,12 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.Experimental.Rendering;
 using UnityEngine.SceneManagement;
 public class Player : MonoBehaviour
 {
-    public Rigidbody rb;
     public float speedMult = 5f;
 
-   public Color _color = Color.white; // Default color
+    public Color _color = Color.white; // Default color
 
     public int score = 0;
     public int _Size = 1;
@@ -21,12 +21,8 @@ public class Player : MonoBehaviour
 
     void Start()
     {
+      //  rb = GetComponent<Rigidbody>();
         gameManager = FindObjectOfType<GameManager>();
-
-        if (rb == null)
-        {
-            rb = GetComponent<Rigidbody>();
-        }
 
         bot = GetComponent<Bot>();
         if (bot == null)
@@ -55,7 +51,7 @@ public class Player : MonoBehaviour
         }
 
 
-        if (!PlayerManager.Instance.thirdPersonView)
+        if (!PlayerManager.Instance.thirdPersonView&&PlayerManager.Instance.gameMode!=4)
         {
             
 
@@ -75,16 +71,16 @@ public class Player : MonoBehaviour
     {
 
         // Update the score text UI element
-        if (scoreText != null)
+        if (scoreText != null&&PlayerManager.Instance.gameMode != 4)
         {
             scoreText.text = score.ToString();
         }
-        else
-        {
-            Debug.LogError("Score Text UI element is not assigned.");
-        }
+        //else
+        //{
+        //    Debug.LogError("Score Text UI element is not assigned.");
+        //}
 
-        if (_Size >= 2000) // game mode?
+        if (_Size >= 2000 && PlayerManager.Instance.gameMode != 1) // game mode?
         {
             _Size = 2000; // Cap the size to prevent excessive scaling
             if (bot == null)
@@ -207,7 +203,7 @@ public class Player : MonoBehaviour
             bot.hasTarget = false; // Reset target for the player bot
 
         if (bot == null)
-            _animator.SetTrigger("Eat"); // Trigger absorb animation if the player is absorbed
+            _animator.SetTrigger("Absorb"); // Trigger absorb animation if the player is absorbed
     }
 
     private void UpdateSpeed()
@@ -215,17 +211,9 @@ public class Player : MonoBehaviour
         speedMult = (_Size / Mathf.Pow(_Size, 1.1f)) * 5;
     }
 
-   public void OnJumpButtonClicked()
-    {
-        rb.MovePosition(Vector3.zero); // Reset position to the center of the map
-    }
-
     public void OnMenuButtonClicked()
     {
         Destroy(GameObject.Find("PlayerManager")); // Destroy PlayerManager to reset player data
         SceneManager.LoadScene("Title"); // Load the title scene when the menu button is clicked
     }
-
-
-
 }

@@ -10,14 +10,18 @@ public class GameManager : MonoBehaviour
     public Material[] mapMaterials;
     GameObject fog; // Reference to the fog GameObject for enabling/disabling fog effects
     float gameTimer = 60f; 
-    [SerializeField]Canvas TimerCanvas; // Reference to the canvas displaying the timer
+    [SerializeField] Canvas TimerCanvas; // Reference to the canvas displaying the timer
     [SerializeField] TextMeshProUGUI timerText; // Reference to the text component displaying the timer
+    [SerializeField] Camera secondCam; // Reference to the second camera for third-person view
+    Player player;
     void Start()
     {
-
-
+        player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>(); // Find the player object in the scene and get its Player component 
+        if (PlayerManager.Instance.gameMode == 4)
+            PlayerManager.Instance.mapId = 0; // Set the map ID to 0 if the game mode is 4 (custom map mode)
         switch (PlayerManager.Instance.mapId)
         {
+            
             case 0: // Space
                 RenderSettings.skybox = mapMaterials[0]; // Set the skybox material for the space map
                 PlayerManager.Instance.isCube = false; // Set the isCube flag to true for the cube map
@@ -48,47 +52,55 @@ public class GameManager : MonoBehaviour
 
             cube.transform.localScale = Vector3.one* mult; // Scale the cube based on the spawn radius
         }
-        List<Material> playerMaterial = new List<Material>() { playerMaterials[PlayerManager.Instance.skinId] }; // Create a list to hold the map materials
-        GameObject.Find("Player").GetComponent<MeshRenderer>().SetMaterials(playerMaterial); // Set the player's material based on the selected skin ID
-
+        
         fog = GameObject.Find("Fog"); // Find the fog GameObject in the scene
         // Initialize the fog setting
             ParticleSystem.ShapeModule shape = fog.GetComponent<ParticleSystem>().shape;
             shape.scale = new Vector3(Spawner.spawnRadius, Spawner.spawnRadius, Spawner.spawnRadius); // Set the particle system shape scale based on spawn radius
             fog.SetActive(PlayerManager.Instance.fogEnabled); // Set the fog active state based on the fogEnabled variable
+        List<Material> playerMaterial = new List<Material>() { playerMaterials[PlayerManager.Instance.skinId] }; // Create a list to hold the map materials
+        GameObject.FindAnyObjectByType<LocalPlayer>().GetComponent<MeshRenderer>().SetMaterials(playerMaterial); // Set the player's material based on the selected skin ID
 
         }
 
     // Update is called once per frame
     void Update()
     {
-        if (PlayerManager.Instance.gameMode == 2)
+      
+
+
+            if (PlayerManager.Instance.gameMode == 2 && gameTimer>0)
         {
-            TimerCanvas.gameObject.SetActive(true); // Show the timer canvas if the game mode is 2 (time-based mode)
-            gameTimer -= Time.deltaTime; // Decrease the game timer
-            timerText.text = Mathf.CeilToInt(gameTimer).ToString(); // Update the timer text with the remaining time
-            if (gameTimer <= 0)
+         
+
+                TimerCanvas.gameObject.SetActive(true); // Show the timer canvas if the game mode is 2 (time-based mode)
+                timerText.color = Color.white; // Set the timer text color to white
+                gameTimer -= Time.deltaTime; // Decrease the game timer
+                timerText.text = Mathf.CeilToInt(gameTimer).ToString(); // Update the timer text with the remaining time
+            if (gameTimer <= 0 && player != null)
             {
-                int score = GameObject.Find("Player").GetComponent<Player>().score; // Get the player's score
+                int score = player.score; // Get the player's score
                 // Find all bots in the scene and sort them by score
                 List<Bot> bots = Spawner.botList.FindAll(bot => bot != null); // Find all active bots in the scene
                 bots.Sort((a, b) => b.GetComponent<Player>().score.CompareTo(a.GetComponent<Player>().score)); // Sort bots by score in descending order
                 
-                GameOver(score); // Trigger game over when the timer reaches zero
+                
                 if (score > bots[0].GetComponent<Player>().score)
                 {
                     LocalPlayer.winner = true; // Set the winner flag for the local player if their score is higher than the highest bot score
-                }    
-            gameTimer = 0; // Reset the game timer to prevent further updates
+                }
+                gameTimer = 0; // Reset the game timer to prevent further updates
+                GameOver(score); // Trigger game over when the timer reaches zero
+                
             }
         }
-    }
+        }
+    
 
     public void GameOver(int score) {
 
-      //  InterstitialAdSample adSample = GameObject.Find("InterstitialAdSample").GetComponent<InterstitialAdSample>(); // Find the InterstitialAdSample component in the scene
+        //  InterstitialAdSample adSample = GameObject.Find("InterstitialAdSample").GetComponent<InterstitialAdSample>(); // Find the InterstitialAdSample component in the scene
         //adSample.ShowInterstitialAd(); // Show an interstitial ad when the game is over
-
 
 
         if (score > PlayerManager.Instance.highScore) // Check if the current score is greater than the high score
@@ -115,7 +127,13 @@ public class GameManager : MonoBehaviour
         if(joysticks != null && joysticks.active) // Check if the Joysticks GameObject exists and disable it
             GameObject.Find("Joysticks").SetActive(false); // Disable the player object
 
-        GameObject.Find("Player").GetComponent<Player>().score = 0; // Disable the player's collider to prevent further interactions
+       // Spawner.playerList.Remove(GameObject.FindAnyObjectByType<LocalPlayer>().GetComponent<Player>()); // Remove the player from the player list
+        Destroy(GameObject.FindAnyObjectByType<LocalPlayer>().gameObject); // Disable the player's collider to prevent further interactions
+
+        if (secondCam != null) // Check if the second camera exists
+        {
+            secondCam.gameObject.SetActive(true); // Disable the second camera
+        }
     }
 
 
@@ -128,6 +146,7 @@ public class GameManager : MonoBehaviour
         gameOverCanvas.SetActive(false); // Hide the game over canvas
         Spawner.botList.Clear(); // Clear the list of bots
         Spawner.playerList.Clear(); // Clear the list of players
+        gameTimer = 60f; // Reset the game timer to its initial value
 
         UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
     }
@@ -142,7 +161,4 @@ public class GameManager : MonoBehaviour
         UnityEditor.EditorApplication.isPlaying = false;
 #endif
     }
-
-
-
 }

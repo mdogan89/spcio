@@ -48,7 +48,6 @@ public class PlayerManager : MonoBehaviour
 
     public float moveSensitivity; // Sensitivity for movement
 
-
     void Awake()
     {
         if (Instance == null)
@@ -80,7 +79,12 @@ public class PlayerManager : MonoBehaviour
     {
         nick = nickInputField.text;
         lastNick = nick;
-        SceneManager.LoadScene("GameScene");
+        
+        if(gameMode ==4)
+         SceneManager.LoadScene("HowToPlay");
+        else
+         SceneManager.LoadScene("GameScene");
+
         PlayerPrefs.SetString("LastNick", lastNick); // Save the player's nickname
     }
 

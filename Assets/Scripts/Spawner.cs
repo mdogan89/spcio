@@ -13,6 +13,7 @@ public class Spawner : MonoBehaviour
     public static List<Bot> botList = new List<Bot>();
     Player player;
     public static List<Player> playerList = new List<Player>();
+    public GameObject playerPrefab; // Reference to the player prefab
 
     [SerializeField] TextMeshProUGUI[] playerNamesText;
 
@@ -52,17 +53,26 @@ public class Spawner : MonoBehaviour
         numberOfBots = PlayerManager.Instance.numberOfBots;
         numberOfFood = PlayerManager.Instance.numberOfFood;
         spawnRadius = PlayerManager.Instance.spawnRadius;
+        Player player;
 
+        if (PlayerManager.Instance.gameMode == 4)
+        {
+            player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
+        }
+        else
+        {
+            player = Instantiate(playerPrefab, GetRandomPosition(), Quaternion.identity).GetComponent<Player>();
+            playerList.Add(player);
+        }
     }
     void Start()
     {
-        if(PlayerManager.Instance.gameMode != 3) { 
+
+        if(PlayerManager.Instance.gameMode != 3 && PlayerManager.Instance.gameMode != 4) { 
         SpawnBots();
         UpdateBotNames();
         }
         SpawnFood();
-        player = GameObject.Find("Player").GetComponentInChildren<Player>();
-        playerList.Add(player);
     }
 
     void SpawnBots()

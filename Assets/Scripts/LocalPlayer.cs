@@ -1,3 +1,4 @@
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -5,12 +6,11 @@ public class LocalPlayer : MonoBehaviour
 {
     public float speedMult = 5f;
     public float speedMultAngle = 0.01f;
-    float verticalMove;
-    float horizontalMove;
+    public float verticalMove;
+    public float horizontalMove;
     float lookX;
     float lookY;
     ParticleSystem _particleSystem;
-    [SerializeField] GameObject stars;
     Rigidbody rb;
 
     public static float lookSensitivity; // Sensitivity for camera rotation
@@ -20,18 +20,26 @@ public class LocalPlayer : MonoBehaviour
 
     public static bool winner = false; // Flag to indicate if the player is the winner
 
+    //Quaternion initialRotation;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        //initialRotation = Quaternion.FromToRotation(transform.position, Vector3.zero); // Set the initial rotation to zero
         _particleSystem = GetComponentInChildren<ParticleSystem>();
 
-        stars.SetActive(PlayerManager.Instance.starsEnabled); // Enable or disable stars based on stars setting
+        GameObject.Find("StarParticles").SetActive(PlayerManager.Instance.starsEnabled); // Enable or disable stars based on stars setting
 
-        rb = GetComponent<Rigidbody>();
+        
         exposure = PlayerManager.Instance.exposure; // Get the exposure value from PlayerManager
         RenderSettings.skybox.SetFloat("_Exposure", exposure); // Set the skybox exposure for the scene
         lookSensitivity = PlayerManager.Instance.lookSensitivity; // Get the look sensitivity from PlayerManager
 
+        rb = GetComponent<Rigidbody>(); // Get the Rigidbody component attached to the player
+        if (rb == null)
+        {
+            Debug.LogError("Rigidbody component not found on LocalPlayer. Please ensure it is attached.");
+        }
     }
 
     // Update is called once per frame
@@ -55,6 +63,8 @@ public class LocalPlayer : MonoBehaviour
 
         verticalMove = InputSystem.actions["Move"].ReadValue<Vector2>().normalized.y;
         horizontalMove = InputSystem.actions["Move"].ReadValue<Vector2>().normalized.x;
+        
+
         lookX = InputSystem.actions["Look"].ReadValue<Vector2>().normalized.x;
         lookY = InputSystem.actions["Look"].ReadValue<Vector2>().normalized.y;
 
@@ -71,10 +81,20 @@ public class LocalPlayer : MonoBehaviour
     }
     private void FixedUpdate()
     {
+
         if (PlayerManager.Instance.easyControls)
         {
-            //    Move Player based on input with rigidbody move position
-            Vector3 v = new Vector3(-lookY, lookX, 0f) * lookSensitivity * speedMultAngle * Time.fixedDeltaTime; // Create a vector for rotation based on look input
+            if(InputSystem.actions["Jump"].triggered) // Check if the jump button is pressed or if jumped flag is set
+            {
+                rb.MovePosition(Spawner.GetRandomPosition()); // Reset position to a random position in the spawn area
+               // rb.MoveRotation(initialRotation); // Reset rotation to the initial rotation
+            }
+            else { 
+
+
+
+                //    Move Player based on input with rigidbody move position
+                Vector3 v = new Vector3(-lookY, lookX, 0f) * lookSensitivity * speedMultAngle * Time.fixedDeltaTime; // Create a vector for rotation based on look input
             rb.MoveRotation(rb.rotation * Quaternion.Euler(v)); // Rotate the player based on look input **rb needed?
             rb.MovePosition(rb.position + (transform.TransformDirection(new Vector3(horizontalMove, 0f, verticalMove)) * GetComponent<Player>().speedMult * moveSensitivity * Time.fixedDeltaTime)); // Move the player based on input
             //GameManager gameManager = FindObjectOfType<GameManager>();
@@ -87,13 +107,30 @@ public class LocalPlayer : MonoBehaviour
             //transform.Rotate(-lookY * lookSensitivity * speedMultAngle, lookX * lookSensitivity * speedMultAngle, 0f, Space.Self); // Rotate the player based on look input
             //transform.position += (transform.TransformDirection(new Vector3(horizontalMove, 0f, verticalMove)) * speedMult * moveSensitivity * Time.fixedDeltaTime); // Move the player based on input
         }
+        }
+
         else
         {
-            rb.AddForce(rb.transform.TransformDirection(Vector3.forward) * verticalMove * speedMult * moveSensitivity, ForceMode.Acceleration);
+            if (InputSystem.actions["Jump"].triggered) // Check if the jump button is pressed or if jumped flag is set
+            {
+                rb.MovePosition(Spawner.GetRandomPosition()); // Reset position to a random position in the spawn area
+            }
+            else { 
+                rb.AddForce(rb.transform.TransformDirection(Vector3.forward) * verticalMove * speedMult * moveSensitivity, ForceMode.Acceleration);
             rb.AddForce(rb.transform.TransformDirection(Vector3.right) * horizontalMove * speedMult * moveSensitivity, ForceMode.Acceleration);
 
-            rb.AddTorque(rb.transform.right * speedMultAngle * lookY * -1 * lookSensitivity /50, ForceMode.Acceleration);
-            rb.AddTorque(rb.transform.up * speedMultAngle * lookX * lookSensitivity/50, ForceMode.Acceleration);
+            rb.AddTorque(rb.transform.right * speedMultAngle * lookY * -1 * lookSensitivity / 50, ForceMode.Acceleration);
+            rb.AddTorque(rb.transform.up * speedMultAngle * lookX * lookSensitivity / 50, ForceMode.Acceleration);
+        }
         }
     }
+
+    //public void TouchZone(Vector2 vector2)
+    //{
+    //    // Handle touch input for movement
+    //    verticalMove = vector2.y;
+    //    horizontalMove = vector2.x;
+    //    // Move the player based on touch input
+    //    //GameObject.FindGameObjectWithTag("Player").GetComponent<Rigidbody>().MovePosition(rb.position + (transform.TransformDirection(new Vector3(horizontalMove, 0f, verticalMove)) * GetComponent<Player>().speedMult * moveSensitivity * Time.fixedDeltaTime));
+    //}
 }
