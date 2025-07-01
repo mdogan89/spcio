@@ -1,6 +1,5 @@
 using TMPro;
 using UnityEngine;
-using UnityEngine.Experimental.Rendering;
 using UnityEngine.SceneManagement;
 public class Player : MonoBehaviour
 {
@@ -51,7 +50,7 @@ public class Player : MonoBehaviour
         }
 
 
-        if (!PlayerManager.Instance.thirdPersonView&&PlayerManager.Instance.gameMode!=4)
+        if (!PlayerManager.Instance.thirdPersonView&& SceneManager.GetActiveScene().name != "HowToPlay")
         {
             
 
@@ -71,7 +70,7 @@ public class Player : MonoBehaviour
     {
 
         // Update the score text UI element
-        if (scoreText != null&&PlayerManager.Instance.gameMode != 4)
+        if (scoreText != null&&SceneManager.GetActiveScene().name != "HowToPlay")
         {
             scoreText.text = score.ToString();
         }
@@ -153,8 +152,11 @@ public class Player : MonoBehaviour
     {
         score += 100; // Increase score
         _Size += 12; // Increase size
-        if (bot == null)
+        if (bot == null) { 
             _animator.SetTrigger("Eat"); // Trigger eating animation if not a bot
+            if(PlayerManager.Instance.vibration)
+                Handheld.Vibrate(); // Vibrate the device when eating food
+        }
         UpdateSize(); // Update the size of the player
         UpdateSpeed(); // Update speed based on new size
 
@@ -202,8 +204,12 @@ public class Player : MonoBehaviour
         if (bot != null)
             bot.hasTarget = false; // Reset target for the player bot
 
-        if (bot == null)
+        if (bot == null) { 
             _animator.SetTrigger("Absorb"); // Trigger absorb animation if the player is absorbed
+            if(PlayerManager.Instance.vibration)
+                Handheld.Vibrate(); // Vibrate the device when absorbing another player
+           
+        }
     }
 
     private void UpdateSpeed()

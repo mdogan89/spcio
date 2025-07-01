@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Spawner : MonoBehaviour
 {
@@ -55,20 +56,22 @@ public class Spawner : MonoBehaviour
         spawnRadius = PlayerManager.Instance.spawnRadius;
         Player player;
 
-        if (PlayerManager.Instance.gameMode == 4)
+        if (SceneManager.GetActiveScene().name == "HowToPlay")
         {
             player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
         }
         else
         {
-            player = Instantiate(playerPrefab, GetRandomPosition(), Quaternion.identity).GetComponent<Player>();
+            //Rotate the player prefab to the center of the scene ??
+            Quaternion rotation = Quaternion.Euler(0, 180, 0); 
+            player = Instantiate(playerPrefab, GetRandomPosition(), rotation).GetComponent<Player>();
             playerList.Add(player);
         }
     }
     void Start()
     {
 
-        if(PlayerManager.Instance.gameMode != 3 && PlayerManager.Instance.gameMode != 4) { 
+        if(PlayerManager.Instance.gameMode != 3 && SceneManager.GetActiveScene().name != "HowToPlay") { 
         SpawnBots();
         UpdateBotNames();
         }

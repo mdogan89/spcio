@@ -18,6 +18,8 @@ public class SettingsManager : MonoBehaviour
     [SerializeField] Slider brightnessSlider; // Slider for brightness
     [SerializeField] Slider lookSensitivitySlider; // Slider for look sensitivity
     [SerializeField] Slider moveSensitivitySlider; // Slider for move sensitivity
+    [SerializeField] Toggle vibrationToggle;
+    [SerializeField] Slider timerSlider; // Slider for timer
     void Awake()
     {
         // Ensure the PlayerManager instance is initialized
@@ -119,6 +121,18 @@ public class SettingsManager : MonoBehaviour
         PlayerPrefs.SetFloat("MoveSensitivity", sensitivity); // Save the move sensitivity to PlayerPrefs
     }
 
+    public void OnVibrationToggleSelected(bool isOn)
+    {
+        PlayerManager.Instance.vibration = isOn;
+        PlayerPrefs.SetInt("Vibration", isOn ? 1 : 0); // Save the vibration setting to PlayerPrefs
+    }
+
+    public void OnTimerSelected(float time)
+    {
+        PlayerManager.Instance.timer = time;
+        PlayerPrefs.SetFloat("Timer", time); // Save the timer setting to PlayerPrefs
+    }
+
     void LoadSettings()
     {
         skinToggleGroup.GetComponentInChildren<Transform>().Find($"SkinToggle{PlayerManager.Instance.skinId}").GetComponent<Toggle>().isOn = true;
@@ -135,6 +149,8 @@ public class SettingsManager : MonoBehaviour
         brightnessSlider.value = PlayerManager.Instance.exposure; // Set the brightness slider value based on saved exposure value
         lookSensitivitySlider.value = PlayerManager.Instance.lookSensitivity; // Set the look sensitivity slider value based on saved value
         moveSensitivitySlider.value = PlayerManager.Instance.moveSensitivity; // Set the move sensitivity slider value based on saved value
+        vibrationToggle.isOn = PlayerManager.Instance.vibration; // Set the vibration toggle based on saved setting
+        timerSlider.value = PlayerManager.Instance.timer; // Set the timer slider value based on saved value
     }
 
     public void OnDefaultsButtonClicked()
@@ -153,6 +169,8 @@ public class SettingsManager : MonoBehaviour
         brightnessSlider.value = 3.0f; // Set the brightness slider value based on saved exposure value
         lookSensitivitySlider.value = 1.0f; // Set the look sensitivity slider value based on saved value
         moveSensitivitySlider.value = 1.0f; // Set the move sensitivity slider value based on saved value
+        vibrationToggle.isOn = true; // Set the vibration toggle based on saved setting
+        timerSlider.value = 120f; // Set the timer slider value based on saved value
     }
 
 

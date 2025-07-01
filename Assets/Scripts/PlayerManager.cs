@@ -48,6 +48,9 @@ public class PlayerManager : MonoBehaviour
 
     public float moveSensitivity; // Sensitivity for movement
 
+    public bool vibration = true; // Default vibration setting
+
+    public float timer;
     void Awake()
     {
         if (Instance == null)
@@ -79,13 +82,8 @@ public class PlayerManager : MonoBehaviour
     {
         nick = nickInputField.text;
         lastNick = nick;
-        
-        if(gameMode ==4)
-         SceneManager.LoadScene("HowToPlay");
-        else
-         SceneManager.LoadScene("GameScene");
-
         PlayerPrefs.SetString("LastNick", lastNick); // Save the player's nickname
+        SceneManager.LoadScene("GameScene");
     }
 
     public void OnSettingsButtonClicked()
@@ -104,6 +102,11 @@ public class PlayerManager : MonoBehaviour
     {
         gameMode = mode; // Set the selected game mode
         PlayerPrefs.SetInt("GameMode", gameMode); // Save the game mode to PlayerPrefs
+    }
+
+    public void OnHowToPlayClicked()
+    {
+               SceneManager.LoadScene("HowToPlay"); // Load the How To Play scene
     }
 
     void LoadSettings()
@@ -259,6 +262,22 @@ public class PlayerManager : MonoBehaviour
         {
             gameMode = 0; // Default game mode
             gameModeDropdown.value = 0; // Set the dropdown value to the default game mode
+        }
+        if (PlayerPrefs.HasKey("Vibration"))
+        {
+            vibration = PlayerPrefs.GetInt("Vibration") == 1; // Convert int to bool
+        }
+        else
+        {
+            vibration = true; // Default vibration setting
+        }
+        if(PlayerPrefs.HasKey("Timer"))
+        {
+            timer = PlayerPrefs.GetFloat("Timer");
+        }
+        else
+        {
+            timer = 120f; // Default timer value
         }
     }
 }

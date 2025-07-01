@@ -1,10 +1,9 @@
-using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class LocalPlayer : MonoBehaviour
 {
-    public float speedMult = 5f;
+    public float speedMult;
     public float speedMultAngle = 0.01f;
     public float verticalMove;
     public float horizontalMove;
@@ -15,59 +14,37 @@ public class LocalPlayer : MonoBehaviour
 
     public static float lookSensitivity; // Sensitivity for camera rotation
     public static float moveSensitivity = 1f; // Sensitivity for movement
-
     public float exposure; // Default exposure value for the skybox
-
     public static bool winner = false; // Flag to indicate if the player is the winner
 
-    //Quaternion initialRotation;
-
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        //initialRotation = Quaternion.FromToRotation(transform.position, Vector3.zero); // Set the initial rotation to zero
         _particleSystem = GetComponentInChildren<ParticleSystem>();
-
         GameObject.Find("StarParticles").SetActive(PlayerManager.Instance.starsEnabled); // Enable or disable stars based on stars setting
-
-        
-        exposure = PlayerManager.Instance.exposure; // Get the exposure value from PlayerManager
-        RenderSettings.skybox.SetFloat("_Exposure", exposure); // Set the skybox exposure for the scene
         lookSensitivity = PlayerManager.Instance.lookSensitivity; // Get the look sensitivity from PlayerManager
-
         rb = GetComponent<Rigidbody>(); // Get the Rigidbody component attached to the player
         if (rb == null)
         {
             Debug.LogError("Rigidbody component not found on LocalPlayer. Please ensure it is attached.");
         }
+        if(PlayerManager.Instance.mapId == 2 || PlayerManager.Instance.mapId == 3)
+        {
+            exposure = PlayerManager.Instance.exposure / 2f; // Get the exposure value from PlayerManager
+        }
+        else
+        {
+            exposure = PlayerManager.Instance.exposure; // Get the exposure value from PlayerManager
+        }
+        RenderSettings.skybox.SetFloat("_Exposure", exposure); // Set the skybox exposure for the scene
     }
 
-    // Update is called once per frame
     void Update()
     {
-        //Vector3 offset = new Vector3(0, 0, -10f);
-
-        //Camera.main.transform.SetPositionAndRotation(transform.position + offset, transform.rotation);
-
-
-        //float aspectRatio = Camera.main.aspect;
-        //float orthoSize = (transform.localScale.x + 7) / aspectRatio;
-
-        //Camera.main.orthographicSize = Mathf.Lerp(Camera.main.orthographicSize, orthoSize, Time.deltaTime * 0.1f);
-        // Camera.main.transform.position = Vector3.Lerp(Camera.main.transform.position, new Vector3(transform.position.x, transform.position.y, transform.position.z-10), Time.deltaTime);
-        //Camera.main.transform.eulerAngles = transform.eulerAngles; // Set camera rotation to match player rotation
-        //float speed = 1f; // Speed for lerping camera position
-        //Vector3 rotationLerp = Vector3.Lerp(Camera.main.transform.eulerAngles, transform.eulerAngles,speed * Time.deltaTime);
-        //Camera.main.transform.eulerAngles = rotationLerp;
-
-
+        speedMult = GetComponent<Player>().speedMult; // Get the speed multiplier from the Player component
         verticalMove = InputSystem.actions["Move"].ReadValue<Vector2>().normalized.y;
         horizontalMove = InputSystem.actions["Move"].ReadValue<Vector2>().normalized.x;
-        
-
         lookX = InputSystem.actions["Look"].ReadValue<Vector2>().normalized.x;
         lookY = InputSystem.actions["Look"].ReadValue<Vector2>().normalized.y;
-
 
         if ((verticalMove != 0 || horizontalMove != 0) && PlayerManager.Instance.trailerEnabled)
         {
@@ -79,34 +56,21 @@ public class LocalPlayer : MonoBehaviour
         }
         _particleSystem.startSize = transform.localScale.x/3;
     }
+
     private void FixedUpdate()
     {
-
         if (PlayerManager.Instance.easyControls)
         {
             if(InputSystem.actions["Jump"].triggered) // Check if the jump button is pressed or if jumped flag is set
             {
                 rb.MovePosition(Spawner.GetRandomPosition()); // Reset position to a random position in the spawn area
-               // rb.MoveRotation(initialRotation); // Reset rotation to the initial rotation
             }
-            else { 
-
-
-
+            else {
                 //    Move Player based on input with rigidbody move position
                 Vector3 v = new Vector3(-lookY, lookX, 0f) * lookSensitivity * speedMultAngle * Time.fixedDeltaTime; // Create a vector for rotation based on look input
-            rb.MoveRotation(rb.rotation * Quaternion.Euler(v)); // Rotate the player based on look input **rb needed?
-            rb.MovePosition(rb.position + (transform.TransformDirection(new Vector3(horizontalMove, 0f, verticalMove)) * GetComponent<Player>().speedMult * moveSensitivity * Time.fixedDeltaTime)); // Move the player based on input
-            //GameManager gameManager = FindObjectOfType<GameManager>();
-            ////// Update the map rotation based on player rotation
-
-            ////float rotationY = rb.rotation.eulerAngles.y; // Get the player's rotation around the Y-axis
-
-            ////RenderSettings.skybox.SetFloat("_Rotation", rotationY); // Set the skybox rotation to match the player's rotation
-            /////Moving player with transform. Translate?
-            //transform.Rotate(-lookY * lookSensitivity * speedMultAngle, lookX * lookSensitivity * speedMultAngle, 0f, Space.Self); // Rotate the player based on look input
-            //transform.position += (transform.TransformDirection(new Vector3(horizontalMove, 0f, verticalMove)) * speedMult * moveSensitivity * Time.fixedDeltaTime); // Move the player based on input
-        }
+                rb.MoveRotation(rb.rotation * Quaternion.Euler(v)); // Rotate the player based on look input **rb needed?
+                rb.MovePosition(rb.position + (transform.TransformDirection(new Vector3(horizontalMove, 0f, verticalMove)) * speedMult * moveSensitivity * Time.fixedDeltaTime)); // Move the player based on input
+            }
         }
 
         else
@@ -117,20 +81,10 @@ public class LocalPlayer : MonoBehaviour
             }
             else { 
                 rb.AddForce(rb.transform.TransformDirection(Vector3.forward) * verticalMove * speedMult * moveSensitivity, ForceMode.Acceleration);
-            rb.AddForce(rb.transform.TransformDirection(Vector3.right) * horizontalMove * speedMult * moveSensitivity, ForceMode.Acceleration);
-
-            rb.AddTorque(rb.transform.right * speedMultAngle * lookY * -1 * lookSensitivity / 50, ForceMode.Acceleration);
-            rb.AddTorque(rb.transform.up * speedMultAngle * lookX * lookSensitivity / 50, ForceMode.Acceleration);
-        }
+                rb.AddForce(rb.transform.TransformDirection(Vector3.right) * horizontalMove * speedMult * moveSensitivity, ForceMode.Acceleration);
+                rb.AddTorque(rb.transform.right * speedMultAngle * lookY * -1 * lookSensitivity /50, ForceMode.Acceleration);
+                rb.AddTorque(rb.transform.up * speedMultAngle * lookX * lookSensitivity /50, ForceMode.Acceleration);
+            }
         }
     }
-
-    //public void TouchZone(Vector2 vector2)
-    //{
-    //    // Handle touch input for movement
-    //    verticalMove = vector2.y;
-    //    horizontalMove = vector2.x;
-    //    // Move the player based on touch input
-    //    //GameObject.FindGameObjectWithTag("Player").GetComponent<Rigidbody>().MovePosition(rb.position + (transform.TransformDirection(new Vector3(horizontalMove, 0f, verticalMove)) * GetComponent<Player>().speedMult * moveSensitivity * Time.fixedDeltaTime));
-    //}
 }
