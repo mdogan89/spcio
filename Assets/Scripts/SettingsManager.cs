@@ -1,3 +1,4 @@
+using ColorPicker;
 using System;
 using UnityEngine;
 using UnityEngine.UI;
@@ -20,6 +21,7 @@ public class SettingsManager : MonoBehaviour
     [SerializeField] Slider moveSensitivitySlider; // Slider for move sensitivity
     [SerializeField] Toggle vibrationToggle;
     [SerializeField] Slider timerSlider; // Slider for timer
+    [SerializeField] ColorPicker.ColorPicker colorPicker; // GameObject for color picker
     void Awake()
     {
         // Ensure the PlayerManager instance is initialized
@@ -30,6 +32,9 @@ public class SettingsManager : MonoBehaviour
         }
         // Load saved settings from PlayerPrefs
         LoadSettings();
+
+        colorPicker.gameObject.SetActive(false); // Hide the color picker initially
+
     }
 
     public void OnSkinSelected(int skinId)
@@ -133,6 +138,24 @@ public class SettingsManager : MonoBehaviour
         PlayerPrefs.SetFloat("Timer", time); // Save the timer setting to PlayerPrefs
     }
 
+    public void OnCustomSkinSelected(bool isOn)
+    {
+        //PlayerManager.Instance.customSkin = isOn;
+        colorPicker.gameObject.SetActive(isOn); // Show or hide the color picker based on the toggle state
+    }
+
+    public void OnColorPickerClosed() { 
+        
+        var currentSelectedColor = colorPicker.CurrentSelectedColor;
+        Debug.Log($"Selected Color: {currentSelectedColor}");
+        PlayerManager.Instance.skinColor = currentSelectedColor; // Save the selected color to PlayerManager
+        PlayerPrefs.SetString("SkinColor", ColorUtility.ToHtmlStringRGBA(currentSelectedColor)); // Save the selected color to PlayerPrefs
+
+        Debug.Log(PlayerPrefs.GetString("SkinColor"));
+
+        colorPicker.gameObject.SetActive(false); // Hide the color picker when closed
+    }
+
     void LoadSettings()
     {
         skinToggleGroup.GetComponentInChildren<Transform>().Find($"SkinToggle{PlayerManager.Instance.skinId}").GetComponent<Toggle>().isOn = true;
@@ -151,8 +174,8 @@ public class SettingsManager : MonoBehaviour
         moveSensitivitySlider.value = PlayerManager.Instance.moveSensitivity; // Set the move sensitivity slider value based on saved value
         vibrationToggle.isOn = PlayerManager.Instance.vibration; // Set the vibration toggle based on saved setting
         timerSlider.value = PlayerManager.Instance.timer; // Set the timer slider value based on saved value
+        colorPicker.CurrentSelectedColor = PlayerManager.Instance.skinColor; // Set the color picker to the saved
     }
-
     public void OnDefaultsButtonClicked()
     {
         skinToggleGroup.GetComponentInChildren<Transform>().Find($"SkinToggle{0}").GetComponent<Toggle>().isOn = true;
@@ -171,6 +194,8 @@ public class SettingsManager : MonoBehaviour
         moveSensitivitySlider.value = 1.0f; // Set the move sensitivity slider value based on saved value
         vibrationToggle.isOn = true; // Set the vibration toggle based on saved setting
         timerSlider.value = 120f; // Set the timer slider value based on saved value
+        colorPicker.CurrentSelectedColor = Color.red; // Set the color picker to the default color
+        colorPicker.gameObject.SetActive(false); // Hide the color picker when defaults are reset
     }
 
 

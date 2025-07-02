@@ -3,14 +3,17 @@ using UnityEngine.InputSystem;
 
 public class LocalPlayer : MonoBehaviour
 {
+    private const float RotationDivisor = 50f;
+    private const float DefaultSpeedMultAngle = 0.01f;
+
     public float speedMult;
-    public float speedMultAngle = 0.01f;
-    public float verticalMove;
-    public float horizontalMove;
-    float lookX;
-    float lookY;
+    public float speedMultAngle = DefaultSpeedMultAngle;
+
     ParticleSystem _particleSystem;
     Rigidbody rb;
+
+    private Vector2 moveInput;
+    private Vector2 lookInput;
 
     public static float lookSensitivity; // Sensitivity for camera rotation
     public static float moveSensitivity = 1f; // Sensitivity for movement
@@ -40,51 +43,69 @@ public class LocalPlayer : MonoBehaviour
 
     void Update()
     {
-        speedMult = GetComponent<Player>().speedMult; // Get the speed multiplier from the Player component
-        verticalMove = InputSystem.actions["Move"].ReadValue<Vector2>().normalized.y;
-        horizontalMove = InputSystem.actions["Move"].ReadValue<Vector2>().normalized.x;
-        lookX = InputSystem.actions["Look"].ReadValue<Vector2>().normalized.x;
-        lookY = InputSystem.actions["Look"].ReadValue<Vector2>().normalized.y;
+        speedMult = GetComponent<Player>().speedMult;
+        moveInput = InputSystem.actions["Move"].ReadValue<Vector2>().normalized;
+        lookInput = InputSystem.actions["Look"].ReadValue<Vector2>().normalized;
 
-        if ((verticalMove != 0 || horizontalMove != 0) && PlayerManager.Instance.trailerEnabled)
-        {
-            _particleSystem.Play(); // Play particle system when moving
-        }
+        if ((moveInput != Vector2.zero) && PlayerManager.Instance.trailerEnabled)
+            _particleSystem.Play();
         else
-        {
-            _particleSystem.Stop(); // Stop particle system when not moving
-        }
-        _particleSystem.startSize = transform.localScale.x/3;
+            _particleSystem.Stop();
+
+        _particleSystem.startSize = transform.localScale.x;
     }
 
     private void FixedUpdate()
     {
         if (PlayerManager.Instance.easyControls)
         {
-            if(InputSystem.actions["Jump"].triggered) // Check if the jump button is pressed or if jumped flag is set
+            if (InputSystem.actions["Jump"].triggered)
+                TeleportToRandomPosition();
+            else
             {
-                rb.MovePosition(Spawner.GetRandomPosition()); // Reset position to a random position in the spawn area
-            }
-            else {
-                //    Move Player based on input with rigidbody move position
-                Vector3 v = new Vector3(-lookY, lookX, 0f) * lookSensitivity * speedMultAngle * Time.fixedDeltaTime; // Create a vector for rotation based on look input
-                rb.MoveRotation(rb.rotation * Quaternion.Euler(v)); // Rotate the player based on look input **rb needed?
-                rb.MovePosition(rb.position + (transform.TransformDirection(new Vector3(horizontalMove, 0f, verticalMove)) * speedMult * moveSensitivity * Time.fixedDeltaTime)); // Move the player based on input
+                RotatePlayer();
+                MovePlayer();
             }
         }
-
         else
         {
-            if (InputSystem.actions["Jump"].triggered) // Check if the jump button is pressed or if jumped flag is set
+            if (InputSystem.actions["Jump"].triggered)
+                TeleportToRandomPosition();
+            else
             {
-                rb.MovePosition(Spawner.GetRandomPosition()); // Reset position to a random position in the spawn area
-            }
-            else { 
-                rb.AddForce(rb.transform.TransformDirection(Vector3.forward) * verticalMove * speedMult * moveSensitivity, ForceMode.Acceleration);
-                rb.AddForce(rb.transform.TransformDirection(Vector3.right) * horizontalMove * speedMult * moveSensitivity, ForceMode.Acceleration);
-                rb.AddTorque(rb.transform.right * speedMultAngle * lookY * -1 * lookSensitivity /50, ForceMode.Acceleration);
-                rb.AddTorque(rb.transform.up * speedMultAngle * lookX * lookSensitivity /50, ForceMode.Acceleration);
+                ApplyMovementForces();
+                ApplyRotationForces();
             }
         }
+    }
+
+    private void TeleportToRandomPosition()
+    {
+        rb.MovePosition(Spawner.GetRandomPosition());
+    }
+
+    private void RotatePlayer()
+    {
+        Vector3 rotation = new Vector3(-lookInput.y, lookInput.x, 0f) * lookSensitivity * speedMultAngle * Time.fixedDeltaTime;
+        rb.MoveRotation(rb.rotation * Quaternion.Euler(rotation));
+    }
+
+    private void MovePlayer()
+    {
+        Vector3 move = transform.TransformDirection(new Vector3(moveInput.x, 0f, moveInput.y)) * speedMult * moveSensitivity * Time.fixedDeltaTime;
+        rb.MovePosition(rb.position + move);
+    }
+
+    private void ApplyMovementForces()
+    {
+        Vector3 desiredVelocity = rb.transform.TransformDirection(new Vector3(moveInput.x, 0f, moveInput.y)) * speedMult * moveSensitivity;
+        Vector3 velocityChange = desiredVelocity - rb.linearVelocity;
+        rb.AddForce(velocityChange, ForceMode.VelocityChange);
+    }
+
+    private void ApplyRotationForces()
+    {
+        rb.AddTorque(rb.transform.right * speedMultAngle * -lookInput.y * lookSensitivity / RotationDivisor, ForceMode.Acceleration);
+        rb.AddTorque(rb.transform.up * speedMultAngle * lookInput.x * lookSensitivity / RotationDivisor, ForceMode.Acceleration);
     }
 }

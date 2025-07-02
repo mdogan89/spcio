@@ -59,7 +59,10 @@ public class GameManager : MonoBehaviour
         
         List<Material> playerMaterial = new List<Material>() { playerMaterials[PlayerManager.Instance.skinId] }; // Create a list to hold the map materials
         GameObject.FindAnyObjectByType<LocalPlayer>().GetComponent<MeshRenderer>().SetMaterials(playerMaterial); // Set the player's material based on the selected skin ID
-        
+        if (PlayerManager.Instance.skinId == 3)
+            player.GetComponent<MeshRenderer>().materials[0].SetColor("_EmissionColor",PlayerManager.Instance.skinColor); // Set the player's color if the skin ID is 3 (custom skin)
+
+
         gameTimer = PlayerManager.Instance.timer; // Set the game timer based on the selected timer value from PlayerManager
     }
 

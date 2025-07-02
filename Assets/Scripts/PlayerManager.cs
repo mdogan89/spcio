@@ -51,6 +51,8 @@ public class PlayerManager : MonoBehaviour
     public bool vibration = true; // Default vibration setting
 
     public float timer;
+
+    public Color skinColor;
     void Awake()
     {
         if (Instance == null)
@@ -68,11 +70,11 @@ public class PlayerManager : MonoBehaviour
 
     void Update()
     {
-        if(nickInputField != null)
+        if (nickInputField != null)
         {
             nick = nickInputField.text; // Update the input field with the current nickname
         }
-        if(SceneManager.GetActiveScene().name == "Title")
+        if (SceneManager.GetActiveScene().name == "Title")
         {
             RenderSettings.skybox.SetFloat("_Rotation", -Time.time * 0.3f); // Rotate the skybox over time in the title scene
         }
@@ -106,7 +108,7 @@ public class PlayerManager : MonoBehaviour
 
     public void OnHowToPlayClicked()
     {
-               SceneManager.LoadScene("HowToPlay"); // Load the How To Play scene
+        SceneManager.LoadScene("HowToPlay"); // Load the How To Play scene
     }
 
     void LoadSettings()
@@ -271,13 +273,22 @@ public class PlayerManager : MonoBehaviour
         {
             vibration = true; // Default vibration setting
         }
-        if(PlayerPrefs.HasKey("Timer"))
+        if (PlayerPrefs.HasKey("Timer"))
         {
             timer = PlayerPrefs.GetFloat("Timer");
         }
         else
         {
             timer = 120f; // Default timer value
+        }
+        if (PlayerPrefs.HasKey("SkinColor"))
+        {
+            string colorString = "#" + PlayerPrefs.GetString("SkinColor");
+            ColorUtility.TryParseHtmlString(colorString, out skinColor); // Parse the saved color string            
+        }
+        else
+        {
+            skinColor = Color.red; // Default
         }
     }
 }

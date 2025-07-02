@@ -115,16 +115,6 @@ public class Bot : MonoBehaviour
             }
         }
     }
-
-    void isMoving()
-    {
-        if (rb.linearVelocity.magnitude < 0.1f)
-        {
-            hasTarget = false;
-            target = Vector3.zero;
-        }
-    }
-
 }
 
 

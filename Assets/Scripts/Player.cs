@@ -17,7 +17,7 @@ public class Player : MonoBehaviour
     Bot bot;
     Animator _animator;
     GameManager gameManager;
-
+    float mapLimit = 2000f; // Limit for the map size
     void Start()
     {
       //  rb = GetComponent<Rigidbody>();
@@ -56,8 +56,10 @@ public class Player : MonoBehaviour
 
             if(bot == null)
             {
+                GameManager gameManager = FindObjectOfType<GameManager>();
+                GetComponent<MeshRenderer>().material = gameManager.playerMaterials[0]; // Set the player's material based on the selected skin ID
                 Camera.main.transform.position = transform.position; // Adjust camera position for first-person view
-                GetComponentInChildren<Canvas>().GetComponent<Transform>().position = GetComponentInChildren<Canvas>().GetComponent<Transform>().position + new Vector3(0, 0, 5); // Adjust canvas position for first-person view
+                GetComponentInChildren<Canvas>().GetComponent<Transform>().position = GetComponentInChildren<Canvas>().GetComponent<Transform>().position + new Vector3(0, 0, -5); // Adjust canvas position for first-person view
                 scoreText.color = Color.white; // Set score text color to white for first-person view
                 nickText.color = Color.white; // Set nickname text color to white for first-person view
                 PlayerManager.Instance.trailerEnabled = false; // Disable trailer effect for first-person view
@@ -68,6 +70,18 @@ public class Player : MonoBehaviour
 
     private void Update()
     {
+        if (PlayerManager.Instance.mapId == 1 && bot != null) {
+            scoreText.color = Color.black; // Set score text color to black for cube map
+            nickText.color = Color.black; // Set nickname text color to black for cube map
+        }
+
+        if(transform.position.magnitude > mapLimit)
+        {
+            // If the player goes out of bounds, reset their position to a random point within the map limits
+            transform.position = Spawner.GetRandomPosition();
+        }
+
+
 
         // Update the score text UI element
         if (scoreText != null&&SceneManager.GetActiveScene().name != "HowToPlay")
