@@ -53,6 +53,8 @@ public class PlayerManager : MonoBehaviour
     public float timer;
 
     public Color skinColor;
+
+    public float volume;
     void Awake()
     {
         if (Instance == null)
@@ -77,6 +79,10 @@ public class PlayerManager : MonoBehaviour
         if (SceneManager.GetActiveScene().name == "Title")
         {
             RenderSettings.skybox.SetFloat("_Rotation", -Time.time * 0.3f); // Rotate the skybox over time in the title scene
+        }
+        if(Camera.main != null)
+        {
+            Camera.main.GetComponent<AudioSource>().volume = volume / 5; // Set the audio source volume based on the saved volume level
         }
     }
 
@@ -289,6 +295,14 @@ public class PlayerManager : MonoBehaviour
         else
         {
             skinColor = Color.red; // Default
+        }
+        if(PlayerPrefs.HasKey("Volume"))
+        {
+            volume = PlayerPrefs.GetFloat("Volume");
+        }
+        else
+        {
+            volume = 0.3f; // Default volume level
         }
     }
 }

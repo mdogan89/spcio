@@ -19,6 +19,7 @@ public class LocalPlayer : MonoBehaviour
     public static float moveSensitivity = 1f; // Sensitivity for movement
     public float exposure; // Default exposure value for the skybox
     public static bool winner = false; // Flag to indicate if the player is the winner
+    public AudioSource audioSource; // Audio source for the player
 
     void Start()
     {
@@ -53,6 +54,20 @@ public class LocalPlayer : MonoBehaviour
             _particleSystem.Stop();
 
         _particleSystem.startSize = transform.localScale.x;
+
+        audioSource.volume = PlayerManager.Instance.volume; // Set the audio source volume based on the saved volume level
+        if(moveInput == Vector2.zero)
+        {
+            audioSource.Pause();
+        }
+        else
+        {
+            audioSource.UnPause();
+        }
+
+
+
+
     }
 
     private void FixedUpdate()

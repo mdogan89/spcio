@@ -18,6 +18,8 @@ public class Player : MonoBehaviour
     Animator _animator;
     GameManager gameManager;
     float mapLimit = 2000f; // Limit for the map size
+    public AudioSource foodAudio;
+    public AudioSource absorbAudio;
     void Start()
     {
       //  rb = GetComponent<Rigidbody>();
@@ -27,6 +29,8 @@ public class Player : MonoBehaviour
         if (bot == null)
         {
             _animator = GetComponent<Animator>();
+            absorbAudio.volume = PlayerManager.Instance.volume; // Set the volume for the absorb audio source
+            foodAudio.volume = PlayerManager.Instance.volume; // Set the volume for the food audio source
 
 
             if (PlayerManager.Instance.nick == null || PlayerManager.Instance.nick == "")
@@ -164,11 +168,13 @@ public class Player : MonoBehaviour
     }
     void eatFood(Food food)
     {
+        
         score += 100; // Increase score
         _Size += 12; // Increase size
         if (bot == null) { 
             _animator.SetTrigger("Eat"); // Trigger eating animation if not a bot
-            if(PlayerManager.Instance.vibration)
+            foodAudio.Play(); // Play the eating sound effect
+            if (PlayerManager.Instance.vibration)
                 Handheld.Vibrate(); // Vibrate the device when eating food
         }
         UpdateSize(); // Update the size of the player
@@ -220,7 +226,8 @@ public class Player : MonoBehaviour
 
         if (bot == null) { 
             _animator.SetTrigger("Absorb"); // Trigger absorb animation if the player is absorbed
-            if(PlayerManager.Instance.vibration)
+            absorbAudio.Play(); // Play the absorb sound effect
+            if (PlayerManager.Instance.vibration)
                 Handheld.Vibrate(); // Vibrate the device when absorbing another player
            
         }

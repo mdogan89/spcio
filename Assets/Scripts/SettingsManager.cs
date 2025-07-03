@@ -22,6 +22,7 @@ public class SettingsManager : MonoBehaviour
     [SerializeField] Toggle vibrationToggle;
     [SerializeField] Slider timerSlider; // Slider for timer
     [SerializeField] ColorPicker.ColorPicker colorPicker; // GameObject for color picker
+    [SerializeField] Slider volumeSlider; // Slider for volume control
     void Awake()
     {
         // Ensure the PlayerManager instance is initialized
@@ -156,6 +157,12 @@ public class SettingsManager : MonoBehaviour
         colorPicker.gameObject.SetActive(false); // Hide the color picker when closed
     }
 
+    public void OnVolumeSelected(float volume)
+    {
+        PlayerManager.Instance.volume = volume;
+        PlayerPrefs.SetFloat("Volume", volume); // Save the volume setting to PlayerPrefs
+    }
+
     void LoadSettings()
     {
         skinToggleGroup.GetComponentInChildren<Transform>().Find($"SkinToggle{PlayerManager.Instance.skinId}").GetComponent<Toggle>().isOn = true;
@@ -175,6 +182,7 @@ public class SettingsManager : MonoBehaviour
         vibrationToggle.isOn = PlayerManager.Instance.vibration; // Set the vibration toggle based on saved setting
         timerSlider.value = PlayerManager.Instance.timer; // Set the timer slider value based on saved value
         colorPicker.CurrentSelectedColor = PlayerManager.Instance.skinColor; // Set the color picker to the saved
+        volumeSlider.value = PlayerManager.Instance.volume; // Set the volume slider value based on saved value
     }
     public void OnDefaultsButtonClicked()
     {
@@ -196,6 +204,7 @@ public class SettingsManager : MonoBehaviour
         timerSlider.value = 120f; // Set the timer slider value based on saved value
         colorPicker.CurrentSelectedColor = Color.red; // Set the color picker to the default color
         colorPicker.gameObject.SetActive(false); // Hide the color picker when defaults are reset
+        volumeSlider.value = 0.3f; // Set the volume slider value based on default value
     }
 
 

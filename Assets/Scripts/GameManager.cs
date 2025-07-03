@@ -14,9 +14,11 @@ public class GameManager : MonoBehaviour
     [SerializeField] Canvas TimerCanvas; // Reference to the canvas displaying the timer
     [SerializeField] TextMeshProUGUI timerText; // Reference to the text component displaying the timer
     [SerializeField] Camera secondCam; // Reference to the second camera
+    [SerializeField] AudioSource gameOverSound; // Reference to the sound played when the game is over
     Player player;
     void Start()
     {
+        gameOverSound.volume = PlayerManager.Instance.volume; // Set the volume for the game over sound effect
         player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>(); // Find the player object in the scene and get its Player component 
         if (SceneManager.GetActiveScene().name == "HowToPlay") { 
             PlayerManager.Instance.mapId = 0; // Set the map ID to 0 if the game mode is 4
@@ -92,6 +94,8 @@ public class GameManager : MonoBehaviour
     }
     
     public void GameOver(int score) {
+        gameOverSound.Play(); // Play the game over sound effect
+        //Camera.main.GetComponent<AudioSource>().PlayDelayed(10f); // Play the main camera's audio source after a delay of 1 second
 
         //  InterstitialAdSample adSample = GameObject.Find("InterstitialAdSample").GetComponent<InterstitialAdSample>(); // Find the InterstitialAdSample component in the scene
         //adSample.ShowInterstitialAd(); // Show an interstitial ad when the game is over
