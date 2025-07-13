@@ -64,6 +64,10 @@ public class Spawner : MonoBehaviour
         {
             player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
         }
+        else if(SceneManager.GetActiveScene().buildIndex == 3)
+        {
+            player = null;
+        }
         else
         {
             player = Instantiate(playerPrefab, GetRandomPosition(), Quaternion.identity).GetComponent<Player>();

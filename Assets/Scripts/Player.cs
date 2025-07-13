@@ -62,7 +62,8 @@ public class Player : MonoBehaviour
             Debug.LogError("PlayerManager instance is not found. Make sure it is initialized before Player.");
             return;
         }
-        Camera.main.GetComponent<AudioSource>().volume = PlayerManager.Instance.volume/5f; // Set the camera audio volume based on the saved volume level
+        if(Camera.main != null)
+            Camera.main.GetComponent<AudioSource>().volume = PlayerManager.Instance.volume/5f; // Set the camera audio volume based on the saved volume level
     }
 
 
@@ -188,7 +189,8 @@ public class Player : MonoBehaviour
         {
             shield = true; // Activate shield powerup
             //playerCollider.material.bounciness = 10f; // Set bounciness to 10 for shield effect
-            meshRenderer.material = gameManager.playerMaterials[4]; // Change material to shield effect
+            if(SceneManager.GetActiveScene().buildIndex != 3)
+                meshRenderer.material = gameManager.playerMaterials[4]; // Change material to shield effect
             if (bot == null) {
                 powerupTimer -= Time.deltaTime; // Decrease powerup timer
                 Debug.Log("Shield powerup activated!");
@@ -210,8 +212,8 @@ public class Player : MonoBehaviour
         if (hasPowerup && currentPowerupType == PowerupType.DoublePoints)
         {
             doublePoints = true;
-
-            meshRenderer.material = gameManager.playerMaterials[5]; // Change material to double points effect
+            if(SceneManager.GetActiveScene().buildIndex != 3)
+                meshRenderer.material = gameManager.playerMaterials[5]; // Change material to double points effect
             if (bot == null)
             {
                 powerupTimer -= Time.deltaTime; // Decrease powerup timer
@@ -235,7 +237,8 @@ public class Player : MonoBehaviour
         if (hasPowerup && currentPowerupType == PowerupType.Piranha)
         {
             piranha = true; // Activate piranha powerup
-            meshRenderer.material = gameManager.playerMaterials[6]; // Change material to piranha effect
+            if(SceneManager.GetActiveScene().buildIndex != 3)
+                meshRenderer.material = gameManager.playerMaterials[6]; // Change material to piranha effect
             if (bot == null)
             {
                 powerupTimer -= Time.deltaTime; // Decrease powerup timer
@@ -546,9 +549,10 @@ public class Player : MonoBehaviour
             return; // No players to check for cup ownership
         List<GameObject> targets = Spawner.playerList.Where(p => p != null).Select(p => p.gameObject).ToList();
         targets.Sort((a, b) => b.GetComponent<Player>().Score.CompareTo(a.GetComponent<Player>().Score)); // Sort players by score in descending order
+        Player cupOwner;
         if (targets[0] != null)
         {
-            Player cupOwner = targets[0].GetComponent<Player>(); // Get the player with the highest score
+            cupOwner = targets[0].GetComponent<Player>(); // Get the player with the highest score
             if (cupOwner == this)
             {
                 cupObject.SetActive(true); // Show cup object for the player with the highest score
@@ -560,8 +564,16 @@ public class Player : MonoBehaviour
                 cupObject.SetActive(false); // Hide cup object for other players
                 if (bot == null)
                     Camera.main.GetComponent<AudioSource>().pitch = 1f; // Increase camera pitch for the player with the cup
+            //}
+            //if (SceneManager.GetActiveScene().buildIndex == 3)
+            //{
+            //   Camera.main.transform.position = Vector3.Lerp(cupOwner.transform.position, cupOwner.transform.position + new Vector3(0, 2, -10), Time.deltaTime); // Smoothly transition camera position
+            //    Camera.main.transform.rotation = Quaternion.Lerp(Camera.main.transform.rotation, cupOwner.transform.rotation * Quaternion.Euler(15, 0, 0), Time.deltaTime * 5f);
+            //    Camera.main.transform.localScale = Vector3.one * cupOwner.size / 100f; // Adjust camera scale based on player size
+                // Smoothly transition camera rotation
             }
         }
+      
     }
 
 

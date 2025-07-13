@@ -192,6 +192,13 @@ public class PlayerManager : MonoBehaviour
         SceneManager.LoadScene(2); // Load the How To Play scene
     }
 
+    public void OnCreditsButtonClicked()
+    {
+        SceneManager.LoadScene(3); // Load the Credits scene
+    }
+
+
+
     void PauseMenu()
     {
         if (SceneManager.GetActiveScene().buildIndex != 0)
