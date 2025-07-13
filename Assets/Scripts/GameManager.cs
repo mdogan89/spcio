@@ -15,20 +15,36 @@ public class GameManager : MonoBehaviour
     [SerializeField] TextMeshProUGUI timerText; // Reference to the text component displaying the timer
     [SerializeField] Camera secondCam; // Reference to the second camera
     [SerializeField] AudioSource gameOverSound; // Reference to the sound played when the game is over
+    [SerializeField] Canvas pauseMenuCanvas;
     Player player;
+
     void Start()
     {
-        gameOverSound.volume = PlayerManager.Instance.volume; // Set the volume for the game over sound effect
-        player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>(); // Find the player object in the scene and get its Player component 
-        if (SceneManager.GetActiveScene().name == "HowToPlay") { 
-            PlayerManager.Instance.mapId = 0; // Set the map ID to 0 if the game mode is 4
-        PlayerManager.Instance.gameMode = 3;
+        player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>(); // Find the player object in the scene and get its Player component
+        if (player == null)
+        {
+            Debug.LogError("Player object not found in the scene. Make sure a player is present before GameManager starts.");
+            return;
         }
-        switch (PlayerManager.Instance.mapId)
+
+        if (PlayerManager.Instance == null)
+        {
+            Debug.LogError("PlayerManager instance is not found. Make sure it is initialized before GameManager.");
+            return;
+        }
+        else {
+            //Set the map ID  and game mode for how to play scene
+            if (SceneManager.GetActiveScene().buildIndex == 2)
+            {
+                PlayerManager.Instance.mapId = 0; // Set the map ID to 0 if the game mode is 3
+                PlayerManager.Instance.gameMode = 3;
+            }
+            //set the map ID for game scene
+            switch (PlayerManager.Instance.mapId)
         {
             case 0: // Space
                 RenderSettings.skybox = mapMaterials[0]; // Set the skybox material for the space map
-                PlayerManager.Instance.isCube = false; // Set the isCube flag to true for the cube map
+                PlayerManager.Instance.isCube = false; // Set the isCube flag to false for the cube map
                 break;
             case 1: // Cube
                 RenderSettings.skybox = mapMaterials[0]; // Set the skybox material for the cube map
@@ -36,36 +52,35 @@ public class GameManager : MonoBehaviour
                 break;
             case 2: // Ocean
                 RenderSettings.skybox = mapMaterials[1]; // Set the skybox material for the ocean map
-                PlayerManager.Instance.isCube = false; // Set the isCube flag to true for the cube map
+                PlayerManager.Instance.isCube = false; // Set the isCube flag to false for the cube map
                 break;
             case 3: // Mars
                 RenderSettings.skybox = mapMaterials[2]; // Set the skybox material for the Mars map
-                PlayerManager.Instance.isCube = false; // Set the isCube flag to true for the cube map
+                PlayerManager.Instance.isCube = false; // Set the isCube flag to false for the cube map
                 break;
             default:
                 Debug.LogError("Invalid map ID selected: " + PlayerManager.Instance.mapId);
                 break;
         }
-        cube.SetActive(PlayerManager.Instance.isCube);
-        if (PlayerManager.Instance.isCube)
-        {
+            // set the cube active state based on the isCube flag
+            cube.SetActive(PlayerManager.Instance.isCube);
+            if (PlayerManager.Instance.isCube)
+            {
             float mult = Spawner.spawnRadius / 40f;
             cube.transform.localScale = Vector3.one* mult; // Scale the cube based on the spawn radius
+            }
+            // Set the fog
+            fog = GameObject.Find("Fog"); // Find the fog GameObject in the scene
+            ParticleSystem.ShapeModule shape = fog.GetComponent<ParticleSystem>().shape;
+            shape.scale = new Vector3(Spawner.spawnRadius, Spawner.spawnRadius, Spawner.spawnRadius); // Set the particle system shape scale based on spawn radius
+            fog.SetActive(PlayerManager.Instance.fogEnabled); // Set the fog active state based on the fogEnabled variable
+            // set the player material based on the selected skin ID
+            List<Material> playerMaterial = new List<Material>() { playerMaterials[PlayerManager.Instance.skinId] }; // Create a list to hold the map materials
+            player.GetComponent<MeshRenderer>().SetMaterials(playerMaterial); // Set the player's material based on the selected skin ID
+
+            gameTimer = PlayerManager.Instance.timer; // Set the game timer based on the selected timer value from PlayerManager
+            gameOverSound.volume = PlayerManager.Instance.volume; // Set the volume for the game over sound effect
         }
-        
-        fog = GameObject.Find("Fog"); // Find the fog GameObject in the scene
-        // Initialize the fog setting
-        ParticleSystem.ShapeModule shape = fog.GetComponent<ParticleSystem>().shape;
-        shape.scale = new Vector3(Spawner.spawnRadius, Spawner.spawnRadius, Spawner.spawnRadius); // Set the particle system shape scale based on spawn radius
-        fog.SetActive(PlayerManager.Instance.fogEnabled); // Set the fog active state based on the fogEnabled variable
-        
-        List<Material> playerMaterial = new List<Material>() { playerMaterials[PlayerManager.Instance.skinId] }; // Create a list to hold the map materials
-        GameObject.FindAnyObjectByType<LocalPlayer>().GetComponent<MeshRenderer>().SetMaterials(playerMaterial); // Set the player's material based on the selected skin ID
-        if (PlayerManager.Instance.skinId == 3)
-            player.GetComponent<MeshRenderer>().materials[0].SetColor("_EmissionColor",PlayerManager.Instance.skinColor); // Set the player's color if the skin ID is 3 (custom skin)
-
-
-        gameTimer = PlayerManager.Instance.timer; // Set the game timer based on the selected timer value from PlayerManager
     }
 
     // Update is called once per frame
@@ -78,12 +93,12 @@ public class GameManager : MonoBehaviour
             timerText.text = Mathf.CeilToInt(gameTimer).ToString(); // Update the timer text with the remaining time
             if (gameTimer <= 0 && player != null)
             {
-                int score = player.score; // Get the player's score
+                int score = player.Score; // Get the player's score
                 // Find all bots in the scene and sort them by score
                 List<Bot> bots = Spawner.botList.FindAll(bot => bot != null); // Find all active bots in the scene
-                bots.Sort((a, b) => b.GetComponent<Player>().score.CompareTo(a.GetComponent<Player>().score)); // Sort bots by score in descending order
+                bots.Sort((a, b) => b.GetComponent<Player>().Score.CompareTo(a.GetComponent<Player>().Score)); // Sort bots by score in descending order
                 
-                if (score > bots[0].GetComponent<Player>().score)
+                if (score > bots[0].GetComponent<Player>().Score)
                 {
                     LocalPlayer.winner = true; // Set the winner flag for the local player if their score is higher than the highest bot score
                 }
@@ -95,6 +110,10 @@ public class GameManager : MonoBehaviour
     
     public void GameOver(int score) {
         gameOverSound.Play(); // Play the game over sound effect
+#if !UNITY_ANDROID_API && !UNITY_IOS
+
+        Cursor.lockState = CursorLockMode.None; // Lock the cursor to the center of the screen
+#endif
         //Camera.main.GetComponent<AudioSource>().PlayDelayed(10f); // Play the main camera's audio source after a delay of 1 second
 
         //  InterstitialAdSample adSample = GameObject.Find("InterstitialAdSample").GetComponent<InterstitialAdSample>(); // Find the InterstitialAdSample component in the scene
@@ -120,7 +139,12 @@ public class GameManager : MonoBehaviour
         if(joysticks != null && joysticks.active) // Check if the Joysticks GameObject exists and disable it
             GameObject.Find("Joysticks").SetActive(false); // Disable the player object
 
-        Destroy(GameObject.FindAnyObjectByType<LocalPlayer>().gameObject); // Disable the player
+        var playerObject = GameObject.FindGameObjectWithTag("Player");
+
+        if (playerObject != null) // Check if the player object exists
+        {
+                Destroy(playerObject); // Destroy the player object     
+        }
 
         if (secondCam != null) // Check if the second camera exists
         {
@@ -128,11 +152,49 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    public void OnRestartButtonClicked()
+    {
+        //var manager = GameObject.Find("PlayerManager");
+        //if (manager != null)
+        //    Destroy(manager); // Destroy the PlayerManager instance if it exists
+        if(pauseMenuCanvas.isActiveAndEnabled)
+            pauseMenuCanvas.gameObject.SetActive(false); // Hide the pause menu canvas if it is active
+        Time.timeScale = 1f; // Resume the game by setting time scale back to normal
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name); // Reload the current scene to restart the game
+    }
+    public void OnResumeButtonClicked()
+    {
+        // This could involve unpausing the game, hiding the pause menu, and resuming gameplay
+        if(pauseMenuCanvas.isActiveAndEnabled)
+            pauseMenuCanvas.gameObject.SetActive(false); // Hide the pause menu canvas if it is active
+        Time.timeScale = 1f; // Resume the game by setting time scale back to normal
+    }
+
+    public void OnPauseButtonClicked()
+    {
+        // This could involve showing a pause menu, stopping gameplay, and freezing the game state
+        if(!pauseMenuCanvas.isActiveAndEnabled)
+            pauseMenuCanvas.gameObject.SetActive(true); // Show the pause menu canvas if it is not active
+        Time.timeScale = 0f; // Pause the game by setting time scale to zero
+    }
+
+    public void OnMenuButtonClicked()
+    {
+        var manager = GameObject.Find("PlayerManager");
+        if (manager != null)
+            Destroy(manager); // Destroy the PlayerManager instance if it exists
+        SceneManager.LoadScene(0);
+    }
     public void OnPlayAgainButtonClicked()
     {
         // Logic to reset the game state and restart the game
         // This could involve resetting player scores, positions, and any other game state variables
-        gameOverCanvas.SetActive(false); // Hide the game over canvas
+        if(gameOverCanvas.active)
+            gameOverCanvas.SetActive(false); // Hide the game over canvas
+       
+        if(pauseMenuCanvas.isActiveAndEnabled)
+            pauseMenuCanvas.gameObject.SetActive(false); // Hide the pause menu canvas if it is active
+
         Spawner.botList.Clear(); // Clear the list of bots
         Spawner.playerList.Clear(); // Clear the list of players
         gameTimer = 180f; // Reset the game timer to its initial value

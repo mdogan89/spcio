@@ -46,7 +46,7 @@ public class Bot : MonoBehaviour
                 {
                     if (t == null) continue;
                     float dist = Vector3.Distance(transform.position, t.transform.position);
-                    int score = t.GetComponent<Player>().score;
+                    int score = t.GetComponent<Player>().Score;
                     candidates.Add((t, dist, score));
                 }
 
@@ -58,7 +58,7 @@ public class Bot : MonoBehaviour
 
         var closest = candidates.OrderBy(c => c.distance).First();
 
-        if (closest.score == botPlayer.score || closest.score > botPlayer.score)
+        if (closest.score == botPlayer.Score || closest.score > botPlayer.Score)
             FindFood();
         else
         {
@@ -76,7 +76,7 @@ public class Bot : MonoBehaviour
             hasTarget = false;
             return;
         }
-        float speed = botPlayer.speedMult * Mathf.Clamp01(distance / 5f); // Yakla�t�k�a yava�la
+        float speed = botPlayer.SpeedMult * Mathf.Clamp01(distance / 5f); // Yakla�t�k�a yava�la
         rb.MovePosition(rb.position + direction.normalized * speed * Time.fixedDeltaTime * PlayerManager.Instance.moveSensitivity);
     }
     void FindFood()
@@ -93,7 +93,7 @@ public class Bot : MonoBehaviour
             hasTarget = true;
         }
     }
-    List<Vector3> GetFoodList()
+   List<Vector3> GetFoodList()
     {
         var foods = GameObject.FindGameObjectsWithTag("Food");
         if (foods == null || foods.Length == 0) return new List<Vector3>();

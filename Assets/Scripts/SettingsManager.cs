@@ -11,18 +11,17 @@ public class SettingsManager : MonoBehaviour
     [SerializeField] Slider playerNumberSlider; // Slider for number of bots
     [SerializeField] Slider foodNumberSlider; // Slider for number of food items
     [SerializeField] Slider spawnRadiusSlider; // Slider for spawn radius
-    [SerializeField] Toggle thirdPersonViewToggle; // Toggle for third-person view
     [SerializeField] Toggle fogToggle; // Toggle for fog
     [SerializeField] Toggle trailerToggle; // Toggle for trailer
     [SerializeField] Toggle starsToggle; // Toggle for stars
     [SerializeField] Toggle easyControlsToggle; // Toggle for easy controls
-    [SerializeField] Slider brightnessSlider; // Slider for brightness
     [SerializeField] Slider lookSensitivitySlider; // Slider for look sensitivity
     [SerializeField] Slider moveSensitivitySlider; // Slider for move sensitivity
-    [SerializeField] Toggle vibrationToggle;
     [SerializeField] Slider timerSlider; // Slider for timer
     [SerializeField] ColorPicker.ColorPicker colorPicker; // GameObject for color picker
-    [SerializeField] Slider volumeSlider; // Slider for volume control
+    [SerializeField] Toggle foodToggle;
+    [SerializeField] Slider volumeSlider;
+    [SerializeField] Toggle powerupToggle; // Toggle for power-ups
     void Awake()
     {
         // Ensure the PlayerManager instance is initialized
@@ -73,16 +72,6 @@ public class SettingsManager : MonoBehaviour
         PlayerManager.Instance.spawnRadius = radius;
         PlayerPrefs.SetFloat("SpawnRadius", PlayerManager.Instance.spawnRadius); // Save the spawn radius to PlayerPrefs
     }
-    public void OnBrightnessSelected(float brightness)
-    {
-        PlayerManager.Instance.exposure = brightness;
-        PlayerPrefs.SetFloat("Brightness", brightness); // Save the brightness setting to PlayerPrefs
-    }
-    public void OnCameraPosition(bool thirdPerson)
-    {
-        PlayerManager.Instance.thirdPersonView = thirdPerson;
-        PlayerPrefs.SetInt("ThirdPersonView", thirdPerson ? 1 : 0); // Save the camera position setting to PlayerPrefs
-    }
     public void OnFogSelected(bool isOn)
     {
         //PlayerManager.Instance.fogEnabled = isOn;
@@ -126,41 +115,39 @@ public class SettingsManager : MonoBehaviour
         PlayerManager.Instance.moveSensitivity = sensitivity;
         PlayerPrefs.SetFloat("MoveSensitivity", sensitivity); // Save the move sensitivity to PlayerPrefs
     }
-
-    public void OnVibrationToggleSelected(bool isOn)
-    {
-        PlayerManager.Instance.vibration = isOn;
-        PlayerPrefs.SetInt("Vibration", isOn ? 1 : 0); // Save the vibration setting to PlayerPrefs
-    }
-
     public void OnTimerSelected(float time)
     {
         PlayerManager.Instance.timer = time;
         PlayerPrefs.SetFloat("Timer", time); // Save the timer setting to PlayerPrefs
     }
-
     public void OnCustomSkinSelected(bool isOn)
     {
         //PlayerManager.Instance.customSkin = isOn;
         colorPicker.gameObject.SetActive(isOn); // Show or hide the color picker based on the toggle state
     }
-
     public void OnColorPickerClosed() { 
         
         var currentSelectedColor = colorPicker.CurrentSelectedColor;
-        Debug.Log($"Selected Color: {currentSelectedColor}");
         PlayerManager.Instance.skinColor = currentSelectedColor; // Save the selected color to PlayerManager
         PlayerPrefs.SetString("SkinColor", ColorUtility.ToHtmlStringRGBA(currentSelectedColor)); // Save the selected color to PlayerPrefs
-
-        Debug.Log(PlayerPrefs.GetString("SkinColor"));
-
         colorPicker.gameObject.SetActive(false); // Hide the color picker when closed
     }
+    public void OnEasyFoodSelected(bool isOn)
+    {
+        PlayerManager.Instance.easyFood = isOn;
+        PlayerPrefs.SetInt("EasyFood", isOn ? 1 : 0); // Save the easy food setting to PlayerPrefs
+    }
 
-    public void OnVolumeSelected(float volume)
+    public void OnVolumeChanged(float volume)
     {
         PlayerManager.Instance.volume = volume;
         PlayerPrefs.SetFloat("Volume", volume); // Save the volume setting to PlayerPrefs
+    }
+    
+    public void OnPowerupSelected(bool isOn)
+    {
+        PlayerManager.Instance.powerup = isOn;
+        PlayerPrefs.SetInt("Powerup", isOn ? 1 : 0); // Save the power-up setting to PlayerPrefs
     }
 
     void LoadSettings()
@@ -171,18 +158,17 @@ public class SettingsManager : MonoBehaviour
         playerNumberSlider.value = PlayerManager.Instance.numberOfBots; // Set the slider value for number of bots based on saved value
         foodNumberSlider.value = PlayerManager.Instance.numberOfFood; // Set the slider value for number of food items based on saved value
         spawnRadiusSlider.value = PlayerManager.Instance.spawnRadius; // Set the slider value for spawn radius based on saved value
-        thirdPersonViewToggle.isOn = PlayerManager.Instance.thirdPersonView; // Set the toggle for third-person view based on saved setting
         fogToggle.isOn = PlayerManager.Instance.fogEnabled; // Set the toggle for fog based on saved setting
         trailerToggle.isOn = PlayerManager.Instance.trailerEnabled; // Set the toggle for trailer based on saved setting
         starsToggle.isOn = PlayerManager.Instance.starsEnabled; // Set the toggle for stars based on saved setting
         easyControlsToggle.isOn = PlayerManager.Instance.easyControls; // Set the toggle for easy controls based on saved setting
-        brightnessSlider.value = PlayerManager.Instance.exposure; // Set the brightness slider value based on saved exposure value
         lookSensitivitySlider.value = PlayerManager.Instance.lookSensitivity; // Set the look sensitivity slider value based on saved value
         moveSensitivitySlider.value = PlayerManager.Instance.moveSensitivity; // Set the move sensitivity slider value based on saved value
-        vibrationToggle.isOn = PlayerManager.Instance.vibration; // Set the vibration toggle based on saved setting
         timerSlider.value = PlayerManager.Instance.timer; // Set the timer slider value based on saved value
         colorPicker.CurrentSelectedColor = PlayerManager.Instance.skinColor; // Set the color picker to the saved
+        foodToggle.isOn = PlayerManager.Instance.easyFood; // Set the easy food toggle based on saved setting
         volumeSlider.value = PlayerManager.Instance.volume; // Set the volume slider value based on saved value
+        powerupToggle.isOn = PlayerManager.Instance.powerup; // Set the power-up toggle based on saved setting
     }
     public void OnDefaultsButtonClicked()
     {
@@ -192,21 +178,17 @@ public class SettingsManager : MonoBehaviour
         playerNumberSlider.value = 50; // Set the slider value for number of bots based on saved value
         foodNumberSlider.value = 50; // Set the slider value for number of food items based on saved value
         spawnRadiusSlider.value = 50; // Set the slider value for spawn radius based on saved value
-        thirdPersonViewToggle.isOn = true; // Set the toggle for third-person view based on saved setting
         fogToggle.isOn = true; // Set the toggle for fog based on saved setting
         trailerToggle.isOn = true; // Set the toggle for trailer based on saved setting
         starsToggle.isOn = true; // Set the toggle for stars based on saved setting
         easyControlsToggle.isOn = true; // Set the toggle for easy controls based on saved setting
-        brightnessSlider.value = 3.0f; // Set the brightness slider value based on saved exposure value
         lookSensitivitySlider.value = 1.0f; // Set the look sensitivity slider value based on saved value
         moveSensitivitySlider.value = 1.0f; // Set the move sensitivity slider value based on saved value
-        vibrationToggle.isOn = true; // Set the vibration toggle based on saved setting
         timerSlider.value = 120f; // Set the timer slider value based on saved value
         colorPicker.CurrentSelectedColor = Color.red; // Set the color picker to the default color
         colorPicker.gameObject.SetActive(false); // Hide the color picker when defaults are reset
-        volumeSlider.value = 0.3f; // Set the volume slider value based on default value
+        foodToggle.isOn = true; // Set the easy food toggle based on saved setting
+        volumeSlider.value = 0.2f; // Set the volume slider value based on saved value
+        powerupToggle.isOn = true; // Set the power-up toggle based on saved setting
     }
-
-
-
 }

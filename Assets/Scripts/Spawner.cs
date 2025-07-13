@@ -16,7 +16,10 @@ public class Spawner : MonoBehaviour
     public static List<Player> playerList = new List<Player>();
     public GameObject playerPrefab; // Reference to the player prefab
 
+    public GameObject[] powerupPrefabs; // Array of powerup prefabs
+    int powerupNumber; // Number of powerups to spawn
     [SerializeField] TextMeshProUGUI[] playerNamesText;
+
 
     string[] playerNames = new string[0];
     string[] playerNamesRickandMorty = new string[20] { "Rick", "Morty", "Beth", "Jerry", "Summer", "Birdperson", "Mr. Poopybutthole", "Evil Morty", "Squanchy", "Tammy", "Unity", "Mr. Meeseeks", "Scary Terry", "Krombopulos Michael", "Gearhead", "Abradolf Lincler", "Noob-Noob", "Jessica", "Poopy Diaper", "Mr. Goldenfold" };
@@ -55,23 +58,25 @@ public class Spawner : MonoBehaviour
         numberOfFood = PlayerManager.Instance.numberOfFood;
         spawnRadius = PlayerManager.Instance.spawnRadius;
         Player player;
+        powerupNumber = numberOfBots / 10; // Set the number of powerups to spawn based on the number of bots
 
-        if (SceneManager.GetActiveScene().name == "HowToPlay")
+        if (SceneManager.GetActiveScene().buildIndex == 2)
         {
             player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
         }
         else
         {
-            //Rotate the player prefab to the center of the scene ??
-            Quaternion rotation = Quaternion.Euler(0, 180, 0); 
-            player = Instantiate(playerPrefab, GetRandomPosition(), rotation).GetComponent<Player>();
+            player = Instantiate(playerPrefab, GetRandomPosition(), Quaternion.identity).GetComponent<Player>();
             playerList.Add(player);
         }
+        if (Camera.main != null)
+            Camera.main.GetComponent<AudioSource>().volume = PlayerManager.Instance.volume/5f;
     }
     void Start()
     {
-
-        if(PlayerManager.Instance.gameMode != 3 && SceneManager.GetActiveScene().name != "HowToPlay") { 
+        if (Camera.main != null)
+            Camera.main.GetComponent<AudioSource>().volume = PlayerManager.Instance.volume / 5f;
+        if (PlayerManager.Instance.gameMode != 3 && SceneManager.GetActiveScene().buildIndex != 2) { 
         SpawnBots();
         UpdateBotNames();
         }
@@ -84,8 +89,8 @@ public class Spawner : MonoBehaviour
         {
             Vector3 position = GetRandomPosition();
             Bot bot = Instantiate(botPrefab, position, Quaternion.identity).GetComponent<Bot>();
-            bot.GetComponent<Player>()._color = Random.ColorHSV(0f, 1f, 0.7f, 1f, 0.5f, 1f);
-            bot.GetComponent<MeshRenderer>().material.color = bot.GetComponent<Player>()._color;
+            bot.GetComponent<Player>().color = Random.ColorHSV(0f, 1f, 0.7f, 1f, 0.5f, 1f);
+            bot.GetComponent<MeshRenderer>().material.color = bot.GetComponent<Player>().color;
             botList.Add(bot);
             playerList.Add(bot.GetComponent<Player>());
         }
@@ -96,7 +101,11 @@ public class Spawner : MonoBehaviour
         for (int i = 0; i < numberOfFood; i++)
         {
             Vector3 position = GetRandomPosition();
-            Instantiate(foodPrefab, position, Quaternion.identity);
+            GameObject food = Instantiate(foodPrefab, position, Quaternion.identity);
+            if (PlayerManager.Instance.easyFood)
+            {
+                food.GetComponent<SphereCollider>().radius = 1f; // Increase the collider radius for easier collection
+            }
         }
     }
 
@@ -107,7 +116,14 @@ public class Spawner : MonoBehaviour
 
     private void Update()
     {
-        UpdatePlayerNames();
+        if (PlayerManager.Instance.gameMode != 3 && SceneManager.GetActiveScene().buildIndex != 2) { 
+            UpdatePlayerNames();
+            if (PlayerManager.Instance.powerup) { 
+            int i = GameObject.FindGameObjectsWithTag("Powerup").Length;
+            if (i < powerupNumber)
+                SpawnPowerup();
+        }
+        }
     }
 
     void UpdatePlayerNames()
@@ -117,15 +133,15 @@ public class Spawner : MonoBehaviour
 
         // sort the playerList by score in descending order
         var sortedList = new List<Player>(playerList);
-        sortedList.Sort((a, b) => b.score.CompareTo(a.score));
+        sortedList.Sort((a, b) => b.Score.CompareTo(a.Score));
 
 
         for (int i = 0; i < playerNamesText.Length; i++)
         {
             if (i < sortedList.Count)
             {
-                playerNamesText[i].text = sortedList[i].nick + " - " + sortedList[i].score;
-                playerNamesText[i].color = sortedList[i]._color;
+                playerNamesText[i].text = sortedList[i].nick + " - " + sortedList[i].Score;
+                playerNamesText[i].color = sortedList[i].color;
             }
             else
             {
@@ -133,7 +149,6 @@ public class Spawner : MonoBehaviour
             }
         }
     }
-
     void UpdateBotNames()
     {
         for (int i = 0; i < botList.Count; i++)
@@ -144,6 +159,19 @@ public class Spawner : MonoBehaviour
         }
     }
 
+    void SpawnPowerup()
+    {
+        if (powerupPrefabs.Length == 0)
+        {
+            Debug.LogWarning("No powerup prefabs assigned in Spawner.");
+            return;
+        }
+        // Randomly select a powerup prefab
+        GameObject selectedPowerup = powerupPrefabs[Random.Range(0, powerupPrefabs.Length)];
+        Vector3 position = GetRandomPosition();
+        Instantiate(selectedPowerup, position, Quaternion.identity);
+    
     }
+}
 
 

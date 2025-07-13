@@ -7,6 +7,15 @@ TagManager:
   - CinemachineTarget
   - Bot
   - Food
+  - PlayerManager
+  - TitlePanel
+  - NickInput
+  - SettingsPanel
+  - GameMode
+  - HighScoreText
+  - Powerup
+  - GlobalVolume
+  - ZeroPoint
   layers:
   - Default
   - TransparentFX
