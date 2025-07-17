@@ -132,7 +132,7 @@ public class PlayerManager : MonoBehaviour
         {
             nick = nickInputField.text; // Update the input field with the current nickname
         }
-        if (SceneManager.GetActiveScene().buildIndex == 0)
+        if (SceneManager.GetActiveScene().buildIndex == 0 || SceneManager.GetActiveScene().buildIndex ==3)
         {
             RenderSettings.skybox.SetFloat("_Rotation", -Time.time * 0.3f); // Rotate the skybox over time in the title scene
         }

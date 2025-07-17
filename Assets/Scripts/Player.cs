@@ -300,6 +300,11 @@ public class Player : MonoBehaviour
 
         CheckCupOWner();
         CheckSurvivalGameMode();
+        if(bot == null) { 
+            doublePointsAudio.volume = PlayerManager.Instance.volume; // Set the double points audio volume based on the saved volume level
+            shieldAudio.volume = PlayerManager.Instance.volume; // Set the shield audio volume based on the saved volume level
+            piranhaAudio.volume = PlayerManager.Instance.volume; // Set the piranha audio volume based on the saved volume level
+        }
     }
 
     private void CheckSurvivalGameMode()
