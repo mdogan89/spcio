@@ -115,10 +115,10 @@ public class GameManager : MonoBehaviour
         Cursor.lockState = CursorLockMode.None; // Lock the cursor to the center of the screen
 #endif
         //Camera.main.GetComponent<AudioSource>().PlayDelayed(10f); // Play the main camera's audio source after a delay of 1 second
-
+        if (PlayerManager.Instance.showAds) { 
         InterstitialAdSample adSample = GameObject.Find("InterstitialAdSample").GetComponent<InterstitialAdSample>(); // Find the InterstitialAdSample component in the scene
         adSample.ShowInterstitialAd(); // Show an interstitial ad when the game is over
-
+        }
         if (score > PlayerManager.Instance.highScore) // Check if the current score is greater than the high score
         {
             PlayerManager.Instance.highScore = score; // Update the high score in PlayerManager                                         

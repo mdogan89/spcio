@@ -1,11 +1,10 @@
 using TMPro;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 public class PlayerManager : MonoBehaviour
 {
-    public static PlayerManager Instance { get; private set; }
+    public static PlayerManager Instance { get; set; }
     public string nick = "nick";
     public TMP_InputField nickInputField;
     public int skinId; // Default skin ID
@@ -13,7 +12,7 @@ public class PlayerManager : MonoBehaviour
     public GameObject titlePanel;
     public TextMeshProUGUI highScoreText;
     public TMP_Dropdown gameModeDropdown; // Dropdown for selecting game mode
-
+    public bool showAds = true; // Default ad visibility setting
 
     public int mapId; // Default map ID
 
