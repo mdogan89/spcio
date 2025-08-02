@@ -84,6 +84,14 @@ public class PlayerManager : MonoBehaviour
 
     void Awake()
     {
+#if UNITY_SERVER
+        SceneManager.LoadScene("Multiplayer");
+#endif
+
+
+
+
+
         if (Instance == null)
         {
             Instance = this;
@@ -195,6 +203,12 @@ public class PlayerManager : MonoBehaviour
     {
         SceneManager.LoadScene(3); // Load the Credits scene
     }
+
+    public void OnMultiplayerButtonClicked()
+    {
+        SceneManager.LoadScene(4); // Load the Multiplayer scene
+    }
+
 
 
 

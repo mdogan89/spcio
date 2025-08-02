@@ -143,13 +143,6 @@ public class Player : MonoBehaviour
 
     private void Update()
     {
-#if !UNITY_ANDROID && !UNITY_IOS
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            OnMenuButtonClicked();
-        }
-#endif
-
         //speed powerup
         if (hasPowerup && currentPowerupType == PowerupType.SpeedBoost)
         {
@@ -461,7 +454,7 @@ public class Player : MonoBehaviour
     {
         if (size < 0)
         {
-            Debug.LogWarning("Size cannot be negative. Setting to 0.");
+            Debug.Log("Size cannot be negative. Setting to 0.");
             size = 0;
         }
 

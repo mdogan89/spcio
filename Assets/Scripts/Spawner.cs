@@ -167,7 +167,7 @@ public class Spawner : MonoBehaviour
     {
         if (powerupPrefabs.Length == 0)
         {
-            Debug.LogWarning("No powerup prefabs assigned in Spawner.");
+            Debug.Log("No powerup prefabs assigned in Spawner.");
             return;
         }
         // Randomly select a powerup prefab

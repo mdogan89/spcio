@@ -68,7 +68,7 @@ public class ShopScript : MonoBehaviour , IStoreListener
         }
         else
         {
-            Debug.LogWarning("Purchase failed: Unknown product ID");
+            Debug.Log("Purchase failed: Unknown product ID");
             return PurchaseProcessingResult.Pending;
         }
 

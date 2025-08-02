@@ -16,6 +16,8 @@ TagManager:
   - Powerup
   - GlobalVolume
   - ZeroPoint
+  - Earth Clouds
+  - Cell
   layers:
   - Default
   - TransparentFX

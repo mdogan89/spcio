@@ -1,7 +1,8 @@
 using UnityEngine;
+#if UNITY_ANDROID_API
 using GooglePlayGames;
 using GooglePlayGames.BasicApi;
-
+#endif
 public class PlayGamesManager : MonoBehaviour
 {
     public void Start()
@@ -11,13 +12,17 @@ public class PlayGamesManager : MonoBehaviour
 
     void SignIn()
     {
+#if UNITY_ANDROID_API || UNITY_IOS
         PlayGamesPlatform.Instance.Authenticate(ProcessAuthentication);
+#endif
     }
 
+#if UNITY_ANDROID_API || UNITY_IOS
 
 internal void ProcessAuthentication(SignInStatus status)
 {
-    if (status == SignInStatus.Success)
+
+        if (status == SignInStatus.Success)
     {
         // Continue with Play Games Services
         string name = PlayGamesPlatform.Instance.GetUserDisplayName();
@@ -34,10 +39,13 @@ internal void ProcessAuthentication(SignInStatus status)
         // PlayGamesPlatform.Instance.ManuallyAuthenticate(ProcessAuthentication).
         Debug.Log("User authentication failed: " + status);
         }
-}
 
-    public void PlayGamesSignInClicked()
+}
+#endif
+public void PlayGamesSignInClicked()
     {
+#if UNITY_ANDROID_API || UNITY_IOS
         PlayGamesPlatform.Instance.ManuallyAuthenticate(ProcessAuthentication);
+#endif
     }
-    }
+}
