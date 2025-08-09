@@ -293,6 +293,7 @@ public class Player : MonoBehaviour
 
         CheckCupOWner();
         CheckSurvivalGameMode();
+        UpdateSize();
         if(bot == null) { 
             doublePointsAudio.volume = PlayerManager.Instance.volume; // Set the double points audio volume based on the saved volume level
             shieldAudio.volume = PlayerManager.Instance.volume; // Set the shield audio volume based on the saved volume level
@@ -433,7 +434,7 @@ public class Player : MonoBehaviour
                 Handheld.Vibrate();
 #endif
         }
-        UpdateSize();
+       UpdateSize();
         UpdateSpeed();
 
         Vector3 position = Spawner.GetRandomPosition();
@@ -458,8 +459,9 @@ public class Player : MonoBehaviour
             size = 0;
         }
 
-        float scale = 1f + 1000f * (Mathf.Clamp(size, 0, 65535) / 65535f);
-        transform.localScale = Vector3.one * scale;
+        //float scale = 1f + 1000f * (Mathf.Clamp(size, 0, 65535) / 65535f);
+        Vector3 v = Vector3.one + Vector3.one * 1000 * (size / 65535f);
+        transform.localScale = v;
     }
 
     public void AbsorbPlayer(Player other)
@@ -500,7 +502,7 @@ public class Player : MonoBehaviour
                 other.score = 100;
                 other.size = 1;
                 other.speedMult = 5f;
-                other.transform.localScale = new Vector3(1, 1, 1);
+                //other.transform.localScale = new Vector3(1, 1, 1);
                 other.GetComponent<Rigidbody>().MovePosition(Spawner.GetRandomPosition());
                 if (other.GetComponent<Bot>() != null)
                     other.GetComponent<Bot>().hasTarget = false;

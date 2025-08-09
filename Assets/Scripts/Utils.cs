@@ -56,7 +56,7 @@ public static class Utils
 
     public static int GetServerPortFromStartupArgs()
     {
-        int port = 9000;
+        int port = 9100;
 
         string[] commandLineArgs = System.Environment.GetCommandLineArgs();
 

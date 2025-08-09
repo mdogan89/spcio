@@ -28,6 +28,14 @@ public class InGameUIHandler : SimulationBehaviour
 
        // statusText.gameObject.SetActive(false);
     }
+
+    void Update()
+    {
+        SetStatusText();
+    }
+
+
+
     public void SetConnectionType(string type)
     {
         connectionTypeText.text = $"Connection type: {type} ";
@@ -41,15 +49,19 @@ public class InGameUIHandler : SimulationBehaviour
     public void OnJoinGame()
     {
         Debug.Log("OnJoinGame clicked");
-        NetworkPlayer.Local.JoinGame(PlayerManager.Instance.nick);
-
-        //joinGameCanvas.gameObject.SetActive(false);
+        if (NetworkPlayer.Local == null)
+            Debug.Log("NetworkPlayer.Local is null");
+        if(NetworkPlayer.Local.nickName.ToString() == "")
+            Debug.Log("NetworkPlayer.Local.nickName is empty");
+        
+        NetworkPlayer.Local.JoinGame("TESTPLAYER");
+        Debug.Log("NetworkPlayer.Local.JoinGame(\"TESTPLAYER\")" + "called");
+        joinGameCanvas.gameObject.SetActive(false);
 
         //statusText.gameObject.SetActive(true);
     }
     public void OnPlayerDied()
     {
-        statusText.gameObject.SetActive(true);
         joinGameCanvas.gameObject.SetActive(true);
     }
 
@@ -75,6 +87,24 @@ public class InGameUIHandler : SimulationBehaviour
             }
         }
     }
+
+    public void SetStatusText() {
+        if (NetworkPlayer.Local != null){
+            statusText.text = NetworkPlayer.Local.playerState.ToString();
+            statusText.gameObject.SetActive(true);
+        }
+        else
+        {
+            statusText.text = "Waiting for spawning player...";
+            statusText.gameObject.SetActive(true);
+        }
+
+
+
+
+    }
+
+
 }
 
 

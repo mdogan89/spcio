@@ -13,10 +13,6 @@ public class NetworkRunnerHandler : MonoBehaviour
 
     NetworkRunner networkRunner;
 
-    // Ekstra alanlar
-    private InGameUIHandler inGameUIHandler;
-    private NetworkSpawner networkSpawner;
-
 
 
     private void Awake()
@@ -27,9 +23,6 @@ public class NetworkRunnerHandler : MonoBehaviour
         {
             networkRunner = networkRunnerInScene;
         }
-
-        inGameUIHandler = FindObjectOfType<InGameUIHandler>();
-        networkSpawner = FindObjectOfType<NetworkSpawner>();
 
     }
 

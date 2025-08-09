@@ -1,13 +1,18 @@
-using Fusion;
+ï»¿using Fusion;
+using Fusion.Addons.Physics;
 using Fusion.Addons.SimpleKCC;
+using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
 {
     [SerializeField] private SimpleKCC kcc;
     [SerializeField] private Transform camTarget;
-    [SerializeField] private float lookSensitivity = 0.15f;
-    [SerializeField] private float speed;
+    [SerializeField] private float lookSensitivity = 20f;
+
+    [Networked]
+    public float speed { get => default; set { } }
 
     public static NetworkPlayer Local { get; set; }
     [Header("UI")]
@@ -23,6 +28,7 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
 
     InGameUIHandler inGameUIHandler;
 
+    [SerializeField] NetworkRigidbody3D _rigidbody;
 
     public enum PlayerState
     {
@@ -44,19 +50,22 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
     private Vector2 baseLookRotation;
     private ChangeDetector _changeDetector;
     public Vector2 inputDirection = Vector2.zero;
+    public Vector2 inputLook = Vector2.zero;
+
     [Networked]
     public bool isBot { get => default; set { } }
-    GameObject aiTarget = null;
+    public Vector3 aiTarget = Vector3.zero;
     NetworkSpawner networkSpawner;
     bool enableSpriteRenderer = true;
     TickTimer delayedEnabledSpriteRenderer = new TickTimer();
+    public bool hasTarget = false;
 
     void Awake()
     {
         inGameUIHandler = FindObjectOfType<InGameUIHandler>();
         networkSpawner = FindObjectOfType<NetworkSpawner>();
 
-        // Nickname için
+        // Nickname iÃ§in
         if (playerNickNameTM == null)
         {
             foreach (var tmp in GetComponentsInChildren<TextMeshProUGUI>(true))
@@ -69,7 +78,7 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
             }
         }
 
-        // Skor için
+        // Skor iÃ§in
         if (scoreText == null)
         {
             foreach (var tmp in GetComponentsInChildren<TextMeshProUGUI>(true))
@@ -89,25 +98,11 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
         Reset();
         UpdateSize();
     }
-    void ResetPlayer()
-    {
-        Vector3 newPosition = Utils.GetRandomPosition();
-
-        kcc.SetPosition(newPosition);
-
-        kcc.enabled = true;
-
-        playerState = PlayerState.playing;
-
-        size = 1;
-        speed = 5;
-        transform.localScale = Vector3.one;
-    }
 
     public override void Spawned()
     {
-        kcc.SetGravity(Physics.gravity.y * 0f);
-        kcc.SetShape(EKCCShape.None, 0, 0);
+        //kcc.SetGravity(Physics.gravity.y * 0f);
+        //kcc.SetShape(EKCCShape.None, 0, 0);
         Runner.SetPlayerObject(Object.InputAuthority, Object);
         if (HasInputAuthority)
         {
@@ -115,7 +110,7 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
             inputManager.LocalPlayer = this;
             Local = this;
             CameraFollow.Singleton.SetTarget(camTarget);
-            kcc.Settings.ForcePredictedLookRotation = true;
+            //kcc.Settings.ForcePredictedLookRotation = true;
         }
         if (Object.HasStateAuthority)
             spriteColor = Random.ColorHSV(0f, 1f, 0.7f, 1f, 0.5f, 1f);
@@ -123,7 +118,7 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
         ////ResetCells();
 
         transform.name = $"P_{Object.Id}";
-        // ChangeDetector'ý doðru þekilde baþlat
+        // ChangeDetector'Ä± doÄŸru ÅŸekilde baÅŸlat
 
             _changeDetector = GetChangeDetector(ChangeDetector.Source.SimulationState);
         
@@ -141,56 +136,84 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
 
     public override void FixedUpdateNetwork()
     {
-        
-        if (playerState != PlayerState.playing)
-        {
-            kcc.SetPosition(transform.position);
-            // kcc.enabled = false;
 
- 
+
+        if (HasStateAuthority) {
+            Vector3 scale = Vector3.one + Vector3.one * 1000 * (size / 65535f);
+            transform.localScale = scale;
+
+            if (playerState == PlayerState.playing)
+            {
+                _rigidbody.enabled = true;
+            }
+            else
+            {
+                _rigidbody.enabled = false;
+            }
         }
 
-        if (delayedEnabledSpriteRenderer.Expired(Runner))
-        {
-            playerSpriteRenderer.gameObject.SetActive(enableSpriteRenderer);
 
-            if (Object.HasInputAuthority && enabled)
-                Camera.main.transform.position = transform.position;
+
+        //if (delayedEnabledSpriteRenderer.Expired(Runner))
+        //{
+        //    playerSpriteRenderer.gameObject.SetActive(enableSpriteRenderer);
+
+        //    if (Object.HasInputAuthority && enabled) { 
+        //        Camera.main.transform.position = transform.position;
             
-            delayedEnabledSpriteRenderer = TickTimer.None;
-        }
+        //}
+        //    delayedEnabledSpriteRenderer = TickTimer.None;
+
+        //}
 
         //Movement **check if player inside the game area**
-        if (GetInput(out NetInput input))
+        if (GetInput(out NetInput netInput))
         {
-            inputDirection = input.Direction;
+            inputDirection = netInput.Direction;
+            inputLook = netInput.LookDelta;
         }
         if (Object.HasStateAuthority)
         {
             //bot movement
             if (isBot)
             {
-                if (aiTarget == null)
+                //if ai target is null find a target
+                if (hasTarget == false || aiTarget == Vector3.zero)
                 {
-                    GameObject[] foodTargets = GameObject.FindGameObjectsWithTag("Cell");
-                    aiTarget = foodTargets[Random.Range(0, foodTargets.Length)];
+                    Debug.Log("Has no target, finding food..." + hasTarget);
+                    FindFood();
                 }
+                //if ai target is not null move towards it
                 else
                 {
-                    Vector3 vector3 = aiTarget.transform.position - transform.position;
-                    kcc.Move(vector3.normalized * speed);
-                    baseLookRotation = kcc.GetLookRotation();
+                    speed = (size / Mathf.Pow(size, 1.1f)) * 5;
+                    //transform.localScale = Vector3.one + Vector3.one * 1000 * (size / 65535);
+                    Vector3 vector3 = aiTarget - transform.position;
+                    float distance = vector3.magnitude;
+                   // float _speed = speed * Mathf.Clamp01(distance / 5f); // Yaklaï¿½tï¿½kï¿½a yavaï¿½la
+                    _rigidbody.Rigidbody.MovePosition(_rigidbody.Rigidbody.position + vector3.normalized * speed * Runner.DeltaTime);
+                    // _rigidbody.Rigidbody.MovePosition(_rigidbody.Rigidbody.position + vector3.normalized * speed * Runner.DeltaTime);
+                    //baseLookRotation = kcc.GetLookRotation();
+                    if(distance<0.1f)
+                        hasTarget = false; // Reset target if reached
+
+
                 }
             }
             //Player movement
             else
             {
-                kcc.AddLookRotation(input.LookDelta * lookSensitivity);
+                speed = (size / Mathf.Pow(size, 1.1f)) * 5;
+                //transform.localScale = Vector3.one + Vector3.one * 1000 * (size / 65535);
+                Vector3 rotation = new Vector3(-netInput.LookDelta.y, netInput.LookDelta.x, 0f) * lookSensitivity * Runner.DeltaTime;
+                _rigidbody.Rigidbody.MoveRotation(_rigidbody.Rigidbody.rotation * Quaternion.Euler(rotation));
                 UpdateCamTarget();
-                Vector3 worldDirection = kcc.LookRotation * new Vector3(input.Direction.x, 0, input.Direction.y);
+                //Vector3 worldDirection = kcc.LookRotation * new Vector3(input.Direction.x, 0, input.Direction.y);
+                Vector3 move = transform.TransformDirection(new Vector3(netInput.Direction.x, 0, netInput.Direction.y)) * speed * Runner.DeltaTime ;
+                _rigidbody.Rigidbody.MovePosition(_rigidbody.Rigidbody.position + move);
 
-                kcc.Move(worldDirection.normalized * speed);
-                baseLookRotation = kcc.GetLookRotation();
+                //kcc.Move(move);
+                //baseLookRotation = kcc.GetLookRotation();
 
             }
         }
@@ -200,7 +223,7 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
             inGameUIHandler.SetConnectionType(Runner.CurrentConnectionType.ToString());
             inGameUIHandler.SetRtt($"RTT {Mathf.RoundToInt((float)Runner.GetPlayerRtt(Object.InputAuthority) * 100)} ms");
         }
-        // Change detection kontrolü için yeni yaklaþým
+        // Change detection kontrolÃ¼ iÃ§in yeni yaklaÅŸÄ±m
 
         if (_changeDetector != null)
             {
@@ -208,29 +231,52 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
                 CheckStateChanges();
 
             }
-        
+
+
+
+
+    }
+    void FindFood()
+    {
+
+        var foodList = GetFoodList();
+        Debug.Log($"Food list count: {foodList.Count}");
+        if (foodList.Count > 0)
+        {
+            aiTarget = foodList[0];
+            hasTarget = true;
+            Debug.Log($"AI target set to: {aiTarget}");
+            Debug.Log($"hasTarget set to: {hasTarget}");
+        }
+    }
+    List<Vector3> GetFoodList()
+    {
+        var foods = GameObject.FindGameObjectsWithTag("Cell");
+        if (foods == null || foods.Length == 0) return new List<Vector3>();
+        return foods.Select(f => f.transform.position)
+                    .OrderBy(pos => Vector3.Distance(transform.position, pos))
+                    .ToList();
     }
 
     public override void Render()
     {
-        if (kcc.Settings.ForcePredictedLookRotation)
-        {
-            Vector2 predictedLookRotation = baseLookRotation + inputManager.AccumulatedMouseDelta * lookSensitivity;
-            kcc.SetLookRotation(predictedLookRotation);
-        }
+        //if (kcc.Settings.ForcePredictedLookRotation)
+        //{
+        //    //Vector2 predictedLookRotation = baseLookRotation + inputManager.AccumulatedMouseDelta * lookSensitivity;
+        //    //kcc.SetLookRotation(predictedLookRotation);
+        //}
         UpdateCamTarget();
         if (playerNickNameTM != null && scoreText != null)
         {
             playerNickNameTM.text = nickName.ToString();
             scoreText.text = size.ToString();
         }
-        playerSpriteRenderer.transform.localScale = Vector3.one + Vector3.one * 100 * (size / 65535f);
     }
 
 
     private void UpdateCamTarget()
     {
-        camTarget.localRotation = Quaternion.Euler(kcc.GetLookRotation().x, 0, 0);
+        camTarget.transform.rotation = transform.rotation;
     }
 
     private void OnTriggerEnter(Collider other)
@@ -241,23 +287,23 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
             other.gameObject.GetComponent<NetworkTransform>().transform.position = Utils.GetRandomPosition();
         }
 
-        if (other.GetComponentInParent<NetworkPlayer>() && HasStateAuthority)
+        if (other.GetComponent<NetworkPlayer>() && HasStateAuthority)
         {
-            NetworkPlayer player = other.GetComponentInParent<NetworkPlayer>();
+            NetworkPlayer player = other.GetComponent<NetworkPlayer>();
             if (player.size == size)
                 return;
             if (player.size > size)
             {
                 Debug.Log(nickName + "collided with bigger player" + player.nickName);
-                float foodFromOtherPlayer = player.size * 0.1f;
+                float foodFromOtherPlayer = size * 0.1f;
 
                 if (foodFromOtherPlayer < 20)
                 {
                     foodFromOtherPlayer = 20;
                 }
-                OnCollectFood((ushort)foodFromOtherPlayer);
+                player.OnCollectFood((ushort)foodFromOtherPlayer);
 
-                player.OnPlayerDead();
+                OnPlayerDead();
                 //  Runner.Despawn(player.Object);
             }
             //else
@@ -277,8 +323,9 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
 
     public void JoinGame(string nickname)
     {
-        
-        RPC_JoinGame(nickname);
+        Debug.Log($"JoinGame called with nickname: {nickname}");
+       // if(HasInputAuthority)
+            RPC_JoinGame(nickname);
     }
 
     public void BotJoinGame()
@@ -305,6 +352,7 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
     void OnSizeChanged(ushort s)
     {
         UpdateSize();
+        speed = (size / Mathf.Pow(size, 1.1f)) * 5;
         scoreText.text = s.ToString();
     }
 
@@ -358,25 +406,44 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
     {
         size = 1;
         speed = 5;
+        transform.localScale = Vector3.one;
+        playerState = PlayerState.playing;
+        hasTarget = false;
     }
     void UpdateSize()
     {
         //meshrenderer
-        playerSpriteRenderer.transform.localScale = Vector3.one + Vector3.one * 100 * (size / 65535f);
+        transform.localScale = Vector3.one + Vector3.one * 1000 * (size / 65535f);
     }
-    void OnCollectFood(ushort growSize)
+   public void OnCollectFood(ushort growSize)
     {
         size += growSize;
         //speed -= speed / 100;
-        speed = (size / Mathf.Pow(size, 1.1f)) * 50;
+        speed = (size / Mathf.Pow(size, 1.1f)) * 5;
         UpdateSize();
+        hasTarget = false;
         //scoreText.text = size.ToString();
     }
-    //public void ResetCells()
-    //{
-    //    eatenCells = 0;
-    //}
 
+    public void ResetPlayer()
+    {
+        //if (HasStateAuthority)
+        //{
+            Debug.Log("Reset Player called");
+            playerState = PlayerState.playing;
+            Vector3 newPosition = Utils.GetRandomPosition();
+            //enableSpriteRenderer = true;
+
+            _rigidbody.Rigidbody.MovePosition(newPosition);
+
+            //kcc.enabled = true;
+
+            size = 1;
+            speed = 5;
+            transform.localScale = Vector3.one;
+            hasTarget = false;
+        //}
+    }
     private void CheckStateChanges()
     {
         var changes = _changeDetector.DetectChanges(this);

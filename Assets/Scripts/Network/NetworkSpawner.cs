@@ -175,6 +175,8 @@ public class NetworkSpawner : SimulationBehaviour, INetworkRunnerCallbacks
     public void OnConnectedToServer(NetworkRunner runner)
     {
         Debug.Log("OnConnectedToServer");
+        if(runner.IsServer)
+            NetworkPlayer.Local.playerState = NetworkPlayer.PlayerState.connected;
     }
 
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
@@ -183,7 +185,7 @@ public class NetworkSpawner : SimulationBehaviour, INetworkRunnerCallbacks
         if (runner.IsServer)
         {
 #if UNITY_SERVER
-            MultiplayServerHostingHandler.instance.SetCurrentNumberOfPlayers((ushort)runner.ActivePlayers.Count());
+      MultiplayServerHostingHandler.instance.SetCurrentNumberOfPlayers((ushort)runner.ActivePlayers.Count());
 #endif
             if (runner.ActivePlayers.Count() < Utils.GetMaxPlayersFromStartupArgs())
             {

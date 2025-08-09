@@ -8,42 +8,43 @@ using UnityEngine.InputSystem;
 
 public class NetworkInputManager : SimulationBehaviour, IBeforeUpdate, INetworkRunnerCallbacks
 {
-    private NetInput accumulatedInput;
-    private Vector2Accumulator mouseDeltaAccumulator = new() { SmoothingWindow = 0.025f };
-    private bool resetInput;
+    private NetInput netInput;
+    //private Vector2Accumulator mouseDeltaAccumulator = new() { SmoothingWindow = 0.025f };
+    //private bool resetInput;
 
     public NetworkPlayer LocalPlayer;
 
-    public Vector2 AccumulatedMouseDelta => mouseDeltaAccumulator.AccumulatedValue;
+    //public Vector2 AccumulatedMouseDelta => mouseDeltaAccumulator.AccumulatedValue;
 
 
 
 
     void IBeforeUpdate.BeforeUpdate()
     {
-        if (resetInput)
-        {
-            resetInput = false;
-            accumulatedInput = default;
-        }
+        //if (resetInput)
+        //{
+        //    resetInput = false;
+        //    accumulatedInput = default;
+        //}
 
         Gamepad gamepad = Gamepad.current;
         if (gamepad != null)
         {
-
-            Vector2 mDirection = Vector2.zero;
-            if (gamepad.leftStick.up.IsPressed())
-                mDirection += Vector2.up;
-            if (gamepad.leftStick.down.IsPressed())
-                mDirection += Vector2.down;
-            if (gamepad.leftStick.left.IsPressed())
-                mDirection += Vector2.left;
-            if (gamepad.leftStick.right.IsPressed())
-                mDirection += Vector2.right;
-            accumulatedInput.Direction += mDirection;
-            Vector2 lookDelta = gamepad.rightStick.ReadValue() * 10f;
-            Vector2 lookRotationDelta = new(-lookDelta.y, lookDelta.x);
-            mouseDeltaAccumulator.Accumulate(lookRotationDelta);
+            netInput.Direction = InputSystem.actions["Move"].ReadValue<Vector2>();
+            //Vector2 mDirection = Vector2.zero;
+            //if (gamepad.leftStick.up.IsPressed())
+            //    mDirection += Vector2.up;
+            //if (gamepad.leftStick.down.IsPressed())
+            //    mDirection += Vector2.down;
+            //if (gamepad.leftStick.left.IsPressed())
+            //    mDirection += Vector2.left;
+            //if (gamepad.leftStick.right.IsPressed())
+            //    mDirection += Vector2.right;
+            //accumulatedInput.Direction += mDirection;
+            //Vector2 lookDelta = gamepad.rightStick.ReadValue() * 10f;
+            //Vector2 lookRotationDelta = new(-lookDelta.y, lookDelta.x);
+            //mouseDeltaAccumulator.Accumulate(lookRotationDelta);
+            netInput.LookDelta = InputSystem.actions["Look"].ReadValue<Vector2>();
         }
 
 
@@ -70,7 +71,7 @@ public class NetworkInputManager : SimulationBehaviour, IBeforeUpdate, INetworkR
         {
             Vector2 mouseDelta = mouse.delta.ReadValue();
             Vector2 lookRotationDelta = new(-mouseDelta.y, mouseDelta.x);
-            mouseDeltaAccumulator.Accumulate(lookRotationDelta);
+            //mouseDeltaAccumulator.Accumulate(lookRotationDelta);
 
         }
 
@@ -87,10 +88,10 @@ public class NetworkInputManager : SimulationBehaviour, IBeforeUpdate, INetworkR
                 moveDirection += Vector2.left;
             if (keyboard.dKey.isPressed)
                 moveDirection += Vector2.right;
-            accumulatedInput.Direction += moveDirection;
+            //accumulatedInput.Direction += moveDirection;
             buttons.Set(InputButton.Jump, keyboard.spaceKey.isPressed);
         }
-        accumulatedInput.Buttons = new NetworkButtons(accumulatedInput.Buttons.Bits | buttons.Bits);
+        //accumulatedInput.Buttons = new NetworkButtons(accumulatedInput.Buttons.Bits | buttons.Bits);
 
     }
 
@@ -116,10 +117,9 @@ public class NetworkInputManager : SimulationBehaviour, IBeforeUpdate, INetworkR
 
     public void OnInput(NetworkRunner runner, NetworkInput input)
     {
-        accumulatedInput.Direction.Normalize();
-        accumulatedInput.LookDelta = mouseDeltaAccumulator.ConsumeTickAligned(runner);
-        input.Set(accumulatedInput);
-        resetInput = true;
+        netInput.Direction.Normalize();
+        netInput.LookDelta.Normalize();
+        input.Set(netInput);
     }
 
     public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input)
