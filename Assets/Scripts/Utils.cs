@@ -1,3 +1,4 @@
+using System.Linq;
 using UnityEngine;
 
 public static class Utils
@@ -12,8 +13,19 @@ public static class Utils
     }
     public static string GetRandomName()
     {
-        string[] names = new string[] { "Ted", "Barney", "Robin", "Lily", "Marshall", "Homer", "Bart", "Lisa", "Marge", "Meggie" };
-        return names[Random.Range(0, names.Length)];
+        string[] playerNames = new string[0];
+        string[] playerNamesRickandMorty = new string[20] { "Rick", "Morty", "Beth", "Jerry", "Summer", "Birdperson", "Mr. Poopybutthole", "Evil Morty", "Squanchy", "Tammy", "Unity", "Mr. Meeseeks", "Scary Terry", "Krombopulos Michael", "Gearhead", "Abradolf Lincler", "Noob-Noob", "Jessica", "Poopy Diaper", "Mr. Goldenfold" };
+        string[] playerNamesBojack = new string[20] { "Bojack", "Diane", "Todd", "Princess Carolyn", "Mr. Peanutbutter", "Wanda", "Ruthie", "Sarah Lynn", "Vincent Adultman", "Emily", "Judah Mannowdog", "Lenny Turteltaub", "Cuddlywhiskers", "Charley Witherspoon", "Yoda", "Groot", "Darth Vader", "Obi-Wan Kenobi", "Leia Organa", "Han Solo" };
+        string[] playerNamesSimpsons = new string[20] { "Homer", "Marge", "Bart", "Lisa", "Maggie", "Mr. Burns", "Smithers", "Ned Flanders", "Apu", "Krusty", "Sideshow Bob", "Milhouse", "Ralph Wiggum", "Chief Wiggum", "Comic Book Guy", "Edna Krabappel", "Patty Bouvier", "Selma Bouvier", "Moe Szyslak", "Barney Gumble" };
+        string[] playerNamesFamilyGuy = new string[20] { "Peter", "Lois", "Stewie", "Brian", "Meg", "Chris", "Glenn Quagmire", "Cleveland Brown", "Joe Swanson", "Tom Tucker", "Angela", "Carter Pewterschmidt", "Mort Goldman", "Seamus", "Consuela", "Herbert", "Dr. Hartman", "Dr. Elmer Hartman", "Mayor Adam West", "Tricia Takanawa" };
+        string[] playerNamesSouthPark = new string[20] { "Stan", "Kyle", "Cartman", "Kenny", "Butters", "Randy", "Sheila", "Mr. Garrison", "Mr. Mackey", "Chef", "Timmy", "Towelie", "Wendy", "Bebe", "Token", "Craig", "Tweek", "PC Principal", "Mr. Hankey", "Satan" };
+        playerNames = playerNames.Concat(playerNamesRickandMorty)
+            .Concat(playerNamesBojack)
+            .Concat(playerNamesSimpsons)
+            .Concat(playerNamesFamilyGuy)
+            .Concat(playerNamesSouthPark)
+            .ToArray();
+        return playerNames[Random.Range(0, playerNames.Length)] + "AI";
     }
     public static string GetRegionFromStartupArgs()
     {
@@ -89,7 +101,7 @@ public static class Utils
 
     public static ushort GetMaxPlayersFromStartupArgs()
     {
-        int maxPlayers = 30;
+        int maxPlayers = 10;
 
         string[] commandLineArgs = System.Environment.GetCommandLineArgs();
 

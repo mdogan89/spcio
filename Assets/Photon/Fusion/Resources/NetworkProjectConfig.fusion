@@ -19,7 +19,7 @@
         "ReplicationFeatures": 1,
         "InputTransferMode": 0,
         "SimulationUpdateTimeMode": 0,
-        "PlayerCount": 40,
+        "PlayerCount": 10,
         "TickRateSelection": {
             "Client": 64,
             "ServerIndex": 0,
@@ -29,7 +29,7 @@
         "MaxObjectDestroysSentPerPacket": 32
     },
     "Network": {
-        "ConnectionTimeout": 20.0,
+        "ConnectionTimeout": 10.0,
         "ConnectionShutdownTime": 1.0,
         "ReliableDataTransferModes": 3
     },

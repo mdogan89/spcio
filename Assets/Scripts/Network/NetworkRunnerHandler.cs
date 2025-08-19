@@ -13,8 +13,6 @@ public class NetworkRunnerHandler : MonoBehaviour
 
     NetworkRunner networkRunner;
 
-
-
     private void Awake()
     {
         NetworkRunner networkRunnerInScene = FindObjectOfType<NetworkRunner>();
@@ -24,6 +22,11 @@ public class NetworkRunnerHandler : MonoBehaviour
             networkRunner = networkRunnerInScene;
         }
 
+        //NetworkObject networkSpawnerInScene = FindObjectOfType<NetworkSpawner>().gameObject.GetComponent<NetworkObject>();
+        //if (networkSpawnerInScene != null)
+        //{
+        //    networkSpawner = networkSpawnerInScene;
+        //}
     }
 
     async private void Start()
@@ -47,17 +50,15 @@ public class NetworkRunnerHandler : MonoBehaviour
 #endif
             int multiplayerSceneIndex2 = SceneManager.GetSceneByName("Multiplayer").buildIndex;
 
-            await InitializeNetworkRunner(networkRunner, gameMode, "TestSession", NetAddress.Any(), SceneManager.GetActiveScene().buildIndex, null);
-            Debug.Log("Clnetwork runner initialized at scene:" + SceneManager.GetActiveScene().buildIndex);
-
-            
+            await InitializeNetworkRunner(networkRunner, gameMode, "TestSession", SceneManager.GetActiveScene().buildIndex, null);
+            Debug.Log( gameMode + "runner initialized at scene:" + SceneManager.GetActiveScene().buildIndex);
         }
 
-        Debug.Log("InitializeNetworkRunner done");
+       
     }
 
 
-    protected virtual Task InitializeNetworkRunner(NetworkRunner runner, GameMode gameMode, string sessionName, NetAddress address, int scene, Action<NetworkRunner> onGameStarted)
+    protected virtual Task InitializeNetworkRunner(NetworkRunner runner, GameMode gameMode, string sessionName, int scene, Action<NetworkRunner> onGameStarted)
     {
         var sceneManager = GetSceneManager(runner);
         runner.ProvideInput = true;
@@ -84,12 +85,11 @@ public class NetworkRunnerHandler : MonoBehaviour
         //}
 
 
-          Debug.Log($"InitilizeNetworkRunner with port{appSettings.Port} using region {appSettings.FixedRegion}");
+          Debug.Log($"InitializeNetworkRunner with port{appSettings.Port} using region {appSettings.FixedRegion}");
 
         return runner.StartGame(new StartGameArgs
         {
             GameMode = gameMode,
-            Address = address,
             Scene = SceneRef.FromIndex(scene),
             SessionName = sessionName,
             //OnGameStarted = onGameStarted,

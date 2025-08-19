@@ -1,13 +1,12 @@
 ﻿using Fusion;
 using Fusion.Addons.Physics;
-using Fusion.Addons.SimpleKCC;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
 {
-    [SerializeField] private SimpleKCC kcc;
     [SerializeField] private Transform camTarget;
     [SerializeField] private float lookSensitivity = 20f;
 
@@ -24,7 +23,7 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
     [Header("Sprite")]
     public MeshRenderer playerSpriteRenderer;
     [Networked ]
-    public NetworkString<_16> nickName { get => default; set { } }
+    public NetworkString<_16> nickName { get ; set; }
 
     InGameUIHandler inGameUIHandler;
 
@@ -47,7 +46,6 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
     public ushort size { get => default; set { } }
 
     private NetworkInputManager inputManager;
-    private Vector2 baseLookRotation;
     private ChangeDetector _changeDetector;
     public Vector2 inputDirection = Vector2.zero;
     public Vector2 inputLook = Vector2.zero;
@@ -104,6 +102,7 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
         //kcc.SetGravity(Physics.gravity.y * 0f);
         //kcc.SetShape(EKCCShape.None, 0, 0);
         Runner.SetPlayerObject(Object.InputAuthority, Object);
+        Debug.Log("NetworkPlayer Spawned: " + Object.InputAuthority + " " + Object.Id);
         if (HasInputAuthority)
         {
             inputManager = Runner.GetComponent<NetworkInputManager>();
@@ -139,7 +138,7 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
 
 
         if (HasStateAuthority) {
-            Vector3 scale = Vector3.one + Vector3.one * 1000 * (size / 65535f);
+            Vector3 scale = Vector3.one + Vector3.one * 100 * (size / 65535f);
             transform.localScale = scale;
 
             if (playerState == PlayerState.playing)
@@ -180,7 +179,6 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
                 //if ai target is null find a target
                 if (hasTarget == false || aiTarget == Vector3.zero)
                 {
-                    Debug.Log("Has no target, finding food..." + hasTarget);
                     FindFood();
                 }
                 //if ai target is not null move towards it
@@ -240,13 +238,10 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
     {
 
         var foodList = GetFoodList();
-        Debug.Log($"Food list count: {foodList.Count}");
         if (foodList.Count > 0)
         {
             aiTarget = foodList[0];
             hasTarget = true;
-            Debug.Log($"AI target set to: {aiTarget}");
-            Debug.Log($"hasTarget set to: {hasTarget}");
         }
     }
     List<Vector3> GetFoodList()
@@ -317,14 +312,115 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
 
     public void PlayerLeft(PlayerRef player)
     {
-        if (player == Object.InputAuthority)
+        Debug.Log($"PlayerLeft called for player: {player}");
+        if (player == Object.InputAuthority) { 
+            Debug.Log("Despawning player: " + player);
             Runner.Despawn(Object);
+        }
     }
+
+    //[Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    //public void RPC_OnMenuButtonClicked()
+    //{
+    //    if (Object == null)
+    //    {
+    //        Debug.Log("RPC_OnMenuButtonClicked: Object is null");
+    //        return;
+    //    }
+    //    Debug.Log("RPC_OnMenuButtonClicked called" + Object.name);
+
+    //    if (Runner != null && Runner.IsServer)
+    //    {
+    //        Debug.Log("RPC_OnMenuButtonClicked: Despawning player " + Object.name);
+    //        Runner.Despawn(Object);
+    //        Debug.Log("Player despawned: " + Object.name == null);
+    //    }
+    //    if (Runner.IsClient)
+    //    {
+    //        Debug.Log("RPC_OnMenuButtonClicked: Client is trying to leave the game");
+    //        Runner.Shutdown();
+    //    }
+    //    SceneManager.LoadScene(0, LoadSceneMode.Single);
+    //    var manager = GameObject.Find("PlayerManager");
+    //    if (manager != null)
+    //        Destroy(manager); // Destroy the PlayerManager instance if it exists
+    //}
+
+    //public void OnMenuButtonClicked()
+    //{
+    //    Debug.Log("OnMenuButtonClicked");
+
+    //    // (NetworkPlayer localPlayer) = Runner.GetPlayer(Object.InputAuthority);
+
+    //    if (Object.HasInputAuthority)
+    //    {
+    //        Debug.Log("OnMenuButtonClicked: Local player is despawning");
+    //        NetworkRunner _runner = FindAnyObjectByType<NetworkRunner>();
+    //        if (_runner == null)
+    //        {
+    //            Debug.LogError("OnMenuButtonClicked: NetworkRunner is null");
+    //            return;
+    //        }
+
+    //        else if (_runner.IsClient)
+    //        {
+    //            Debug.Log("OnMenuButtonClicked: Client is trying to leave the game");
+    //            Runner.Shutdown();
+    //        }
+    //        else
+    //        {
+    //            Debug.Log("OnMenuButtonClicked: Not local player, cannot despawn");
+
+    //        }
+    //    }
+
+
+
+
+
+
+
+
+
+
+
+            //if (HasStateAuthority)
+            //{
+            //    Debug.Log("OnMenuButtonClicked: Server is despawning player " + NetworkPlayer.Local.Object.Name);
+            //    NetworkRunner _runner = FindAnyObjectByType<NetworkRunner>();
+            //    if (_runner == null)
+            //    {
+            //        Debug.LogError("OnMenuButtonClicked: NetworkRunner is null");
+            //        return;
+            //    }
+            //    else if (_runner.IsServer) {
+            //        Debug.Log("OnMenuButtonClicked: ServerRunner is despawning player " + NetworkPlayer.Local.Object.Name);
+            //        _runner.Despawn(NetworkPlayer.Local.Object);
+            //    }
+
+            //    else if (_runner.IsClient)
+            //    {
+            //        Debug.Log("OnMenuButtonClicked: Client is trying to leave the game");
+            //        Runner.Shutdown();
+            //    }
+
+
+            //public void OnMenuButtonClicked(PlayerRef player)
+            //{
+            //    Debug.Log($"OnMenuButtonClicked called for player: {player}");
+            //    var manager = GameObject.Find("PlayerManager");
+            //    if (manager != null)
+            //        Destroy(manager); // Destroy the PlayerManager instance if it exists
+            //    SceneManager.LoadScene(0, LoadSceneMode.Single);
+            //    PlayerLeft(player);
+            //}
+
+
+        //}
 
     public void JoinGame(string nickname)
     {
-        Debug.Log($"JoinGame called with nickname: {nickname}");
-       // if(HasInputAuthority)
+            Debug.Log($"JoinGame called with nickname: {nickname}");
             RPC_JoinGame(nickname);
     }
 
@@ -413,7 +509,7 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
     void UpdateSize()
     {
         //meshrenderer
-        transform.localScale = Vector3.one + Vector3.one * 1000 * (size / 65535f);
+        transform.localScale = Vector3.one + Vector3.one * 100 * (size / 65535f);
     }
    public void OnCollectFood(ushort growSize)
     {

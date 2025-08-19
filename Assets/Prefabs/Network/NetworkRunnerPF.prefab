@@ -10,9 +10,10 @@ GameObject:
   m_Component:
   - component: {fileID: 3931546067548708164}
   - component: {fileID: 6140032855114280890}
-  - component: {fileID: 857082557402791963}
   - component: {fileID: 6754154499218144621}
   - component: {fileID: 4403217556195192565}
+  - component: {fileID: 4535067421240164028}
+  - component: {fileID: -5747159515024321124}
   m_Layer: 0
   m_Name: NetworkRunnerPF
   m_TagString: Untagged
@@ -47,22 +48,6 @@ MonoBehaviour:
   m_Script: {fileID: -1199893898, guid: e725a070cec140c4caffb81624c8c787, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &857082557402791963
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8909152401755589204}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f959dd8927816c844a06e146067902b4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  playerPrefab: {fileID: 4223049294388577770, guid: a9cfc5fbb9ef803449d5917db2e4359b, type: 3}
-  cellPrefab: {fileID: 6072613950530799379, guid: 9e53f00e5306ba641a771bcf05057108, type: 3}
-  Players: []
-  highscores: []
 --- !u!114 &6754154499218144621
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90,6 +75,35 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _physicsAuthority: 2
   _physicsTiming: 3
-  ClientPhysicsSimulation: 0
+  ClientPhysicsSimulation: 3
   DeltaTimeMultiplier: 1
   SetUnityFixedTimestep: 0
+--- !u!114 &4535067421240164028
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8909152401755589204}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b8edbe7108d8a43ab838cf8b8d9453df, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &-5747159515024321124
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8909152401755589204}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f959dd8927816c844a06e146067902b4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerPrefab: {fileID: 4223049294388577770, guid: a9cfc5fbb9ef803449d5917db2e4359b, type: 3}
+  cellPrefab: {fileID: 6072613950530799379, guid: 9e53f00e5306ba641a771bcf05057108, type: 3}
+  Players: []
+  _NetArray: []
+  highscores: []

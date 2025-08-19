@@ -18,14 +18,22 @@ public class NetworkSpawner : SimulationBehaviour, INetworkRunnerCallbacks
     NetworkObject cellPrefab;
     bool isBotsSpawned = false;
 
-    const int desiredNumberOfPlayers = 30;
+    const int desiredNumberOfPlayers = 10;
 
     List<NetworkPlayer> botList = new List<NetworkPlayer>();
     TickTimer botRespawnTimer = new TickTimer();
 
     public List<NetworkPlayer> Players = new List<NetworkPlayer>();
-    public TextMeshProUGUI[] highscores;
-   // InGameUIHandler gameUIHandler;
+
+    NetworkPlayerList NetworkPlayerList;
+
+    InGameUIHandler gameUIHandler;
+    void Start()
+    {
+        gameUIHandler = FindObjectOfType<InGameUIHandler>();
+        NetworkPlayerList = FindObjectOfType<NetworkPlayerList>();
+    }
+
 
     public override void FixedUpdateNetwork()
     {
@@ -63,46 +71,41 @@ public class NetworkSpawner : SimulationBehaviour, INetworkRunnerCallbacks
                 botRespawnTimer = TickTimer.None;
             }
         }
-       // gameUIHandler = FindObjectOfType<InGameUIHandler>();
-        IEnumerable<NetworkPlayer> orderedPlayers = Players.OrderByDescending(player => player.size);
-
-        List<NetworkPlayer> topTenPlayers = new List<NetworkPlayer>();
-
-        foreach (NetworkPlayer player in orderedPlayers)
+        if (Runner.IsServer && NetworkPlayerList.isActiveAndEnabled)
         {
-            topTenPlayers.Add(player);
-        }
+            IEnumerable<NetworkPlayer> orderedPlayers = Players.OrderByDescending(player => player.size);
+            List<NetworkPlayer> topTenPlayers = new List<NetworkPlayer>();
 
-        for (int i = 0; i < topTenPlayers.Count; i++)
-        {
-            NetworkPlayer player = topTenPlayers[i];
-            if (i > 9)
+            foreach (NetworkPlayer player in orderedPlayers)
             {
-                topTenPlayers.RemoveAt(i);
-            }
+                topTenPlayers.Add(player);
+            }    
+            for (int i = 0; i < topTenPlayers.Count(); i++)
+            {
+                NetworkString<_32> playerName = new NetworkString<_32>(topTenPlayers[i].nickName.ToString() + " : " + topTenPlayers[i].size);
+                NetworkPlayerList.PlayerNetworkArray.Set(i, playerName);
+            }  
         }
-
-
-        //string[] stringList = new string[10];
-        //for (int i = 0; i < 10; i++)
-        //{
-        //    stringList[i] = topTenPlayers[i].nickName.ToString() + " : " + topTenPlayers[i].size.ToString();
-        //}
-
-        // Dictionary<Player, Dictionary<NetworkString<_16>, ushort>> playersDict = new Dictionary<Player, Dictionary<NetworkString<_16>, ushort>>();
-
-        //for (int i = 0; i < 10; i++)
-        //{
-        //    Player player = playersDict.ElementAt(i).Key;
-        //    Dictionary<NetworkString<_16>, ushort> d = new Dictionary<NetworkString<_16>, ushort>();
-        //    d.Add(player.nickName, player.size);
-        //    playersDict.Add(player, d);
-        //}
-       // gameUIHandler.Highscores(topTenPlayers);
     }
+
+    public override void Render()
+    {
+        if (Runner.IsPlayer && NetworkPlayerList.isActiveAndEnabled)
+        {
+            if (gameUIHandler == null)
+                Debug.Log("gameUIHandler is null");
+
+            gameUIHandler.Highscores(NetworkPlayerList.PlayerNetworkArray);
+        }
+    }
+
+
+
+
+
     void SpawnBots()
     {
-        if (Runner.SessionInfo.PlayerCount < desiredNumberOfPlayers + botList.Count)
+        if (Runner.SessionInfo.PlayerCount < desiredNumberOfPlayers + botList.Count && Runner.IsServer)
         {
             int numberOfBotsToSpawn = desiredNumberOfPlayers - Runner.SessionInfo.PlayerCount - botList.Count;
 
@@ -141,14 +144,13 @@ public class NetworkSpawner : SimulationBehaviour, INetworkRunnerCallbacks
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
     {
         Debug.Log("OnPlayerJoined");
-
         if (runner.IsServer)
         {
             NetworkPlayer spawnedNetworkPlayer = runner.Spawn(playerPrefab, Utils.GetRandomPosition(), Quaternion.identity, player);
             spawnedNetworkPlayer.playerState = NetworkPlayer.PlayerState.playing;
             spawnedNetworkPlayer.nickName = PlayerManager.Instance.nick;
             Players.Add(spawnedNetworkPlayer);
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < desiredNumberOfPlayers; i++)
             {
                 NetworkObject networkCell = runner.Spawn(cellPrefab, Utils.GetRandomPosition(), Quaternion.identity);
                 networkCell.transform.position = Utils.GetRandomPosition();
@@ -162,7 +164,9 @@ public class NetworkSpawner : SimulationBehaviour, INetworkRunnerCallbacks
 #endif
             if (runner.ActivePlayers.Count() >= Utils.GetMaxPlayersFromStartupArgs())
             {
+                Debug.Log("runner.ActivePlayers.Count() >= Utils.GetMaxPlayersFromStartupArgs()" + runner.ActivePlayers.Count() + " - " + Utils.GetMaxPlayersFromStartupArgs());
                 runner.SessionInfo.IsOpen = false;
+                Debug.Log("Session is closed, no more players can join");
             }
         }
     }
@@ -175,7 +179,8 @@ public class NetworkSpawner : SimulationBehaviour, INetworkRunnerCallbacks
     public void OnConnectedToServer(NetworkRunner runner)
     {
         Debug.Log("OnConnectedToServer");
-        if(runner.IsServer)
+
+        if (runner.IsServer)
             NetworkPlayer.Local.playerState = NetworkPlayer.PlayerState.connected;
     }
 
@@ -193,6 +198,7 @@ public class NetworkSpawner : SimulationBehaviour, INetworkRunnerCallbacks
             }
         }
         Debug.Log("OnPlayerLeft");
+ 
     }
 
     public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input) { }
