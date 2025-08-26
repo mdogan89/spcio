@@ -114,7 +114,7 @@ public class NetworkSpawner : SimulationBehaviour, INetworkRunnerCallbacks
             for (int i = 0; i < numberOfBotsToSpawn; i++)
             {
                 NetworkPlayer spawnedAIPlayer = Runner.Spawn(playerPrefab, Utils.GetRandomPosition(), Quaternion.identity, null,InitializeBotBeforeSpawn);
-
+                spawnedAIPlayer.nickName = Utils.GetRandomName() + "AI";
                 spawnedAIPlayer.BotJoinGame();
                 botList.Add(spawnedAIPlayer);
                 Players.Add(spawnedAIPlayer);
@@ -148,7 +148,7 @@ public class NetworkSpawner : SimulationBehaviour, INetworkRunnerCallbacks
         {
             NetworkPlayer spawnedNetworkPlayer = runner.Spawn(playerPrefab, Utils.GetRandomPosition(), Quaternion.identity, player);
             spawnedNetworkPlayer.playerState = NetworkPlayer.PlayerState.playing;
-            spawnedNetworkPlayer.nickName = PlayerManager.Instance.nick;
+            //spawnedNetworkPlayer.nickName = PlayerManager.Instance.nick;
             Players.Add(spawnedNetworkPlayer);
             for (int i = 0; i < desiredNumberOfPlayers; i++)
             {

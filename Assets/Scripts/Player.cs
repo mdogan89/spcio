@@ -102,6 +102,7 @@ public class Player : MonoBehaviour
             if (PlayerManager.Instance.nick == null || PlayerManager.Instance.nick == "")
             {
                 PlayerManager.Instance.nick = "Player" + Random.Range(1000, 9999);
+                Debug.Log("Player start called. Nick was empty, set to: " + PlayerManager.Instance.nick);
                 nick = PlayerManager.Instance.nick;
             }
             else

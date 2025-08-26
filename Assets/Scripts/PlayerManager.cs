@@ -5,7 +5,7 @@ using UnityEngine.UI;
 public class PlayerManager : MonoBehaviour
 {
     public static PlayerManager Instance { get; set; }
-    public string nick = "nick";
+    public string nick;
     public TMP_InputField nickInputField;
     public int skinId; // Default skin ID
     public GameObject settingsPanel;
@@ -104,7 +104,13 @@ public class PlayerManager : MonoBehaviour
 #if UNITY_WEBGL
         Camera.main.GetComponent<AudioSource>().Pause(); // Play the main camera's audio source for WebGL builds
 #endif
+
         LoadSettings();
+
+        //if(nickInputField.text != "" || nickInputField.text != string.Empty)
+        //    nick = nickInputField.text ; // Set the input field text to the loaded nickname
+
+
         if (Camera.main != null && Camera.main.GetComponent<AudioSource>() != null)
         {
             Camera.main.GetComponent<AudioSource>().volume = volume / 5; // Set the audio source volume based on the saved volume level
@@ -135,10 +141,10 @@ public class PlayerManager : MonoBehaviour
             }
         }
 
-        if (nickInputField != null)
-        {
-            nick = nickInputField.text; // Update the input field with the current nickname
-        }
+        //if (nickInputField != null && nickInputField.text != "")
+        //{
+        //    nick = nickInputField.text; // Update the input field with the current nickname
+        //}
         if (SceneManager.GetActiveScene().buildIndex == 0 || SceneManager.GetActiveScene().buildIndex ==3)
         {
             RenderSettings.skybox.SetFloat("_Rotation", -Time.time * 0.3f); // Rotate the skybox over time in the title scene
@@ -169,7 +175,15 @@ public class PlayerManager : MonoBehaviour
 
     public void OnStartButtonClicked()
     {
-        nick = nickInputField.text;
+        if(nickInputField.text == "" || nickInputField.text == string.Empty)
+        {
+            nick = "Player" + Random.Range(1000, 9999); // Assign a default nickname if none is set
+            nickInputField.text = nick; // Set the input field text to the default nickname
+            Debug.Log("OnStartButtonClicked, no nick, assigned default: " + nick);
+        }
+        else
+           nick = nickInputField.text;
+         
         lastNick = nick;
         PlayerPrefs.SetString("LastNick", lastNick); // Save the player's nickname
         SceneManager.LoadScene(1);
@@ -206,6 +220,18 @@ public class PlayerManager : MonoBehaviour
 
     public void OnMultiplayerButtonClicked()
     {
+        if (nickInputField.text == "" || nickInputField.text == string.Empty)
+        {
+            nick = "Player" + Random.Range(1000, 9999); // Assign a default nickname if none is set
+            nickInputField.text = nick; // Set the input field text to the default nickname
+            Debug.Log("OnStartButtonClicked, no nick, assigned default: " + nick);
+        }
+        else
+            nick = nickInputField.text;
+
+        lastNick = nick;
+        PlayerPrefs.SetString("LastNick", lastNick); // Save the player's nickname
+        Debug.Log("OnMultiplayerButtonClicked" + nick);
         SceneManager.LoadScene(4); // Load the Multiplayer scene
     }
 
@@ -316,17 +342,20 @@ public class PlayerManager : MonoBehaviour
 
     void LoadSettings()
     {
-        // Load the player's nickname from PlayerPrefs if it exists
+       //Load the player's nickname from PlayerPrefs if it exists
         if (PlayerPrefs.HasKey("LastNick"))
         {
             lastNick = PlayerPrefs.GetString("LastNick");
             nick = lastNick; // Set the nickname to the last used nickname
+            Debug.Log("LoadSettings called" + nick);
             nickInputField.text = nick; // Set the input field text to the loaded nickname
         }
-        else
+        else if (nickInputField.text != "" || nickInputField.text != string.Empty)
         {
-            nick = "Player" + Random.Range(1000, 9999); // Assign a default nickname if none is set
+            nick = nickInputField.text; // Set the nickname to the input field text if it's not empty
+            Debug.Log("LoadSettings called from input field" + nick);
         }
+
         // Load the high score from PlayerPrefs if it exists
         if (PlayerPrefs.HasKey("hsNick"))
         {

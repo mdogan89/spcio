@@ -58,11 +58,16 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
     TickTimer delayedEnabledSpriteRenderer = new TickTimer();
     public bool hasTarget = false;
 
+    [SerializeField] ParticleSystem _particleSystem;
+    [Networked]
+    public bool isMoving { get; set; }
+
+
     void Awake()
     {
         inGameUIHandler = FindObjectOfType<InGameUIHandler>();
         networkSpawner = FindObjectOfType<NetworkSpawner>();
-
+        _particleSystem = GetComponentInChildren<ParticleSystem>();
         // Nickname için
         if (playerNickNameTM == null)
         {
@@ -120,17 +125,26 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
         // ChangeDetector'ı doğru şekilde başlat
 
             _changeDetector = GetChangeDetector(ChangeDetector.Source.SimulationState);
-        
-        
-        if (isBot && HasStateAuthority)
+
+
+        //if (isBot && HasStateAuthority)
+        //{
+        //    nickName = Utils.GetRandomName();
+        ////    playerNickNameTM.text = nickName.ToString();
+        //}
+        //else if (HasStateAuthority)
+        //{
+        //    Debug.Log("NetworkPlayer Spawned with input authority" + PlayerManager.Instance.nick) ;
+        //    nickName = PlayerManager.Instance.nick;
+        //}
+
+        if (HasInputAuthority && !isBot)
         {
-            nickName = Utils.GetRandomName();
-        //    playerNickNameTM.text = nickName.ToString();
+            ChangeNickname(PlayerManager.Instance.nick);
         }
-        else if (Object.HasInputAuthority)
-        {
-            nickName = PlayerManager.Instance.nick;
-        }
+
+
+
     }
 
     public override void FixedUpdateNetwork()
@@ -192,7 +206,8 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
                     _rigidbody.Rigidbody.MovePosition(_rigidbody.Rigidbody.position + vector3.normalized * speed * Runner.DeltaTime);
                     // _rigidbody.Rigidbody.MovePosition(_rigidbody.Rigidbody.position + vector3.normalized * speed * Runner.DeltaTime);
                     //baseLookRotation = kcc.GetLookRotation();
-                    if(distance<0.1f)
+                    _particleSystem.Play();
+                    if (distance<0.1f)
                         hasTarget = false; // Reset target if reached
 
 
@@ -231,8 +246,12 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
             }
 
 
-
-
+        if (Object.HasStateAuthority)
+        {
+            // Hareket kontrolü
+            bool currentlyMoving = inputDirection.magnitude > 0.1f;
+            isMoving = currentlyMoving;
+        }
     }
     void FindFood()
     {
@@ -265,6 +284,19 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
         {
             playerNickNameTM.text = nickName.ToString();
             scoreText.text = size.ToString();
+        }
+        if (_particleSystem != null)
+        {
+            if (isMoving)
+            {
+                if (!_particleSystem.isPlaying)
+                    _particleSystem.Play();
+            }
+            else
+            {
+                if (_particleSystem.isPlaying)
+                    _particleSystem.Stop();
+            }
         }
     }
 
@@ -417,6 +449,38 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
 
 
         //}
+    public void ChangeNickname(string newNick)
+    {
+        if (string.IsNullOrWhiteSpace(newNick))
+        {
+            Debug.Log("ChangeNickname: New nickname is null or whitespace");
+            return;
+        }
+        if (newNick.Length > 16)
+        {
+            newNick = newNick.Substring(0, 16); // Trim to max length
+        }
+        Debug.Log($"ChangeNickname called with newNick: {newNick}");
+        RPC_ChangeNickname(newNick);
+    }
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    void RPC_ChangeNickname(string newNick, RpcInfo info = default)
+    {
+        if (string.IsNullOrWhiteSpace(newNick))
+        {
+            Debug.Log("RPC_ChangeNickname: New nickname is null or whitespace");
+            return;
+        }
+        if (newNick.Length > 16)
+        {
+            newNick = newNick.Substring(0, 16); // Trim to max length
+        }
+        Debug.Log($"[RPC] RPC_ChangeNickname {newNick}");
+        this.nickName = newNick;
+    }
+
+
+
 
     public void JoinGame(string nickname)
     {
@@ -424,6 +488,14 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
             RPC_JoinGame(nickname);
     }
 
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    void RPC_JoinGame(string nickName, RpcInfo info = default)
+    {
+        Debug.Log($"[RPC] RPC_JoinGame {nickName}");
+        this.nickName = nickName;
+
+        ResetPlayer();
+    }
     public void BotJoinGame()
     {
         Debug.Log("Bot joined game");
@@ -431,12 +503,12 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
     }
 
 
-    void OnNickNameChanged()
+    void OnNickNameChanged(NetworkString<_16> nick)
     {
 
-        Debug.Log($"Nickname changed for player to {nickName} for player {gameObject.name}");
+        Debug.Log($"Nickname changed for player to {nick} for player {gameObject.name}");
         Debug.Log($"OnNickNameChanged: {gameObject.name}, playerNickNameTM null? {playerNickNameTM == null}");
-        playerNickNameTM.text = nickName.ToString();
+        playerNickNameTM.text = nick.ToString();
 
     }
 
@@ -452,14 +524,6 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
         scoreText.text = s.ToString();
     }
 
-    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
-    void RPC_JoinGame(string nickName, RpcInfo info = default)
-    {
-        Debug.Log($"[RPC] RPC_JoinGame {nickName}");
-        this.nickName = nickName;
-
-        ResetPlayer();
-    }
 
     public void OnPlayerDead()
     {
@@ -549,7 +613,7 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
                 switch (change)
                 {
                 case nameof(nickName):
-                    OnNickNameChanged();
+                    OnNickNameChanged(nickName);
                     break;
                 case nameof(playerState):
                     OnPlayerStateChanged();
