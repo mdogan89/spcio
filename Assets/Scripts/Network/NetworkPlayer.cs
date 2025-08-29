@@ -3,8 +3,10 @@ using Fusion.Addons.Physics;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using static Unity.Collections.Unicode;
 public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
 {
     [SerializeField] private Transform camTarget;
@@ -62,12 +64,19 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
     [Networked]
     public bool isMoving { get; set; }
 
+    [SerializeField] AudioSource moveAudioSource;
+    [SerializeField] MeshRenderer _meshRenderer;
+    [SerializeField] Canvas joysticks;
+    [SerializeField] Canvas nickScoreCanvas;
+
 
     void Awake()
     {
         inGameUIHandler = FindObjectOfType<InGameUIHandler>();
         networkSpawner = FindObjectOfType<NetworkSpawner>();
         _particleSystem = GetComponentInChildren<ParticleSystem>();
+        if(_meshRenderer==null)
+            _meshRenderer = GetComponent<MeshRenderer>();
         // Nickname için
         if (playerNickNameTM == null)
         {
@@ -104,6 +113,13 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
 
     public override void Spawned()
     {
+        base.Spawned();
+        if (Object.HasStateAuthority)
+        {
+            Debug.Log($"Player {nickName} spawned, updating network array");
+            var spawner = FindObjectOfType<NetworkSpawner>();
+            spawner?.UpdatePlayerNetworkArray();
+        }
         //kcc.SetGravity(Physics.gravity.y * 0f);
         //kcc.SetShape(EKCCShape.None, 0, 0);
         Runner.SetPlayerObject(Object.InputAuthority, Object);
@@ -141,6 +157,7 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
         if (HasInputAuthority && !isBot)
         {
             ChangeNickname(PlayerManager.Instance.nick);
+            moveAudioSource.volume = PlayerManager.Instance.volume;
         }
 
 
@@ -202,7 +219,7 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
                     //transform.localScale = Vector3.one + Vector3.one * 1000 * (size / 65535);
                     Vector3 vector3 = aiTarget - transform.position;
                     float distance = vector3.magnitude;
-                   // float _speed = speed * Mathf.Clamp01(distance / 5f); // Yakla�t�k�a yava�la
+                   // float _speed = speed * Mathf.Clamp01(distance / 5f); // Yaklaştıkça yavaşla
                     _rigidbody.Rigidbody.MovePosition(_rigidbody.Rigidbody.position + vector3.normalized * speed * Runner.DeltaTime);
                     // _rigidbody.Rigidbody.MovePosition(_rigidbody.Rigidbody.position + vector3.normalized * speed * Runner.DeltaTime);
                     //baseLookRotation = kcc.GetLookRotation();
@@ -274,11 +291,6 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
 
     public override void Render()
     {
-        //if (kcc.Settings.ForcePredictedLookRotation)
-        //{
-        //    //Vector2 predictedLookRotation = baseLookRotation + inputManager.AccumulatedMouseDelta * lookSensitivity;
-        //    //kcc.SetLookRotation(predictedLookRotation);
-        //}
         UpdateCamTarget();
         if (playerNickNameTM != null && scoreText != null)
         {
@@ -291,19 +303,26 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
             {
                 if (!_particleSystem.isPlaying)
                     _particleSystem.Play();
+                if (moveAudioSource != null && !moveAudioSource.isPlaying && !isBot)
+                    moveAudioSource.Play();
             }
             else
             {
                 if (_particleSystem.isPlaying)
                     _particleSystem.Stop();
+                if (moveAudioSource != null && moveAudioSource.isPlaying && !isBot)
+                    moveAudioSource.Stop();
             }
         }
+        _meshRenderer.enabled = enableSpriteRenderer;
+        nickScoreCanvas.gameObject.SetActive(enableSpriteRenderer);
+        joysticks.gameObject.SetActive(enableSpriteRenderer && !isBot && Object.HasInputAuthority);
     }
 
 
     private void UpdateCamTarget()
     {
-        camTarget.transform.rotation = transform.rotation;
+        camTarget.transform.rotation = Quaternion.Lerp(camTarget.transform.rotation, transform.rotation * Quaternion.Euler(15, 0, 0), Time.deltaTime * 5f); // Smoothly transition camera rotation
     }
 
     private void OnTriggerEnter(Collider other)
@@ -344,12 +363,14 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
 
     public void PlayerLeft(PlayerRef player)
     {
-        Debug.Log($"PlayerLeft called for player: {player}");
         if (player == Object.InputAuthority) { 
             Debug.Log("Despawning player: " + player);
             Runner.Despawn(Object);
         }
-    }
+
+        }
+
+    
 
     //[Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
     //public void RPC_OnMenuButtonClicked()
@@ -528,7 +549,6 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
     public void OnPlayerDead()
     {
         playerState = PlayerState.dead;
-
         if (!isBot)
             inGameUIHandler.OnPlayerDied();
 
@@ -602,6 +622,7 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
             speed = 5;
             transform.localScale = Vector3.one;
             hasTarget = false;
+            _meshRenderer.enabled = true;
         //}
     }
     private void CheckStateChanges()

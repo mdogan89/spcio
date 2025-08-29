@@ -105,5 +105,3 @@ MonoBehaviour:
   playerPrefab: {fileID: 4223049294388577770, guid: a9cfc5fbb9ef803449d5917db2e4359b, type: 3}
   cellPrefab: {fileID: 6072613950530799379, guid: 9e53f00e5306ba641a771bcf05057108, type: 3}
   Players: []
-  _NetArray: []
-  highscores: []
