@@ -1,6 +1,7 @@
 using Fusion;
 using Fusion.Sockets;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -28,6 +29,8 @@ public class NetworkSpawner : SimulationBehaviour, INetworkRunnerCallbacks
     NetworkPlayerList NetworkPlayerList;
 
     InGameUIHandler gameUIHandler;
+
+
     void Start()
     {
         gameUIHandler = FindObjectOfType<InGameUIHandler>();
@@ -71,21 +74,7 @@ public class NetworkSpawner : SimulationBehaviour, INetworkRunnerCallbacks
                 botRespawnTimer = TickTimer.None;
             }
         }
-        //if (Runner.IsServer && NetworkPlayerList.isActiveAndEnabled)
-        //{
-        //    IEnumerable<NetworkPlayer> orderedPlayers = Players.OrderByDescending(player => player.size);
-        //    List<NetworkPlayer> topTenPlayers = new List<NetworkPlayer>();
 
-        //    foreach (NetworkPlayer player in orderedPlayers)
-        //    {
-        //        topTenPlayers.Add(player);
-        //    }    
-        //    for (int i = 0; i < topTenPlayers.Count(); i++)
-        //    {
-        //        NetworkString<_32> playerName = new NetworkString<_32>(topTenPlayers[i].nickName.ToString() + " : " + topTenPlayers[i].size);
-        //        NetworkPlayerList.PlayerNetworkArray.Set(i, playerName);
-        //    }  
-        //}
         if (Runner.IsServer) { 
             UpdatePlayerNetworkArray();
            // Debug.Log("UpdatePlayerNetworkArray called from FixedUpdateNetwork" + NetworkPlayerList.PlayerNetworkArray.Length);
@@ -104,7 +93,7 @@ public class NetworkSpawner : SimulationBehaviour, INetworkRunnerCallbacks
             if (gameUIHandler == null)
                 Debug.Log("gameUIHandler is null");
 
-            gameUIHandler.Highscores(NetworkPlayerList.Instance.PlayerNetworkArray);
+            gameUIHandler.Highscores(NetworkPlayerList.Instance.PlayerNetworkDict);
         }
     }
 
@@ -180,7 +169,7 @@ public class NetworkSpawner : SimulationBehaviour, INetworkRunnerCallbacks
             // Array'i temizle ve yeniden doldur
             ClearNetworkArray();
             UpdatePlayerNetworkArray();
-            Debug.Log($"Network array updated after player joined. Length: {NetworkPlayerList.Instance.PlayerNetworkArray.Length}");
+            Debug.Log($"NetworkDict updated after player joined. Length: {NetworkPlayerList.Instance.PlayerNetworkDict.Count}");
         }
     }
 
@@ -188,10 +177,7 @@ public class NetworkSpawner : SimulationBehaviour, INetworkRunnerCallbacks
     {
         if (Runner.IsServer && NetworkPlayerList.Instance != null)
         {
-            for (int i = 0; i < NetworkPlayerList.Instance.PlayerNetworkArray.Length; i++)
-            {
-                NetworkPlayerList.Instance.PlayerNetworkArray.Set(i, new NetworkString<_32>(""));
-            }
+            NetworkPlayerList.Instance.PlayerNetworkDict.Clear();
         }
     }
 
@@ -199,25 +185,17 @@ public class NetworkSpawner : SimulationBehaviour, INetworkRunnerCallbacks
     {
         if (!Runner.IsServer || NetworkPlayerList.Instance == null) return;
 
+        ClearNetworkArray();
+
         var orderedPlayers = Players.Where(p => p != null && p.Object != null)
                                    .OrderByDescending(p => p.size)
                                    .ToList();
 
-        //Debug.Log($"Updating network array with {orderedPlayers.Count} players");
-
-        for (int i = 0; i < NetworkPlayerList.Instance.PlayerNetworkArray.Length; i++)
+        for (int i = 0; i < orderedPlayers.Count && i < NetworkPlayerList.Instance.PlayerNetworkDict.Capacity/2; i++)
         {
-            if (i < orderedPlayers.Count)
-            {
-                var player = orderedPlayers[i];
-                var playerInfo = new NetworkString<_32>($"{player.nickName} : {player.size}");
-                NetworkPlayerList.Instance.PlayerNetworkArray.Set(i, playerInfo);
-                //Debug.Log($"Set player at index {i}: {playerInfo}");
-            }
-            else
-            {
-                NetworkPlayerList.Instance.PlayerNetworkArray.Set(i, new NetworkString<_32>(""));
-            }
+            var player = orderedPlayers[i];
+            var playerInfo = new NetworkString<_32>($"{player.nickName} : {player.size}");
+            NetworkPlayerList.Instance.PlayerNetworkDict.Set(playerInfo, player.spriteColor);
         }
     }
 
@@ -285,10 +263,14 @@ public class NetworkSpawner : SimulationBehaviour, INetworkRunnerCallbacks
         
         Debug.Log("OnDisconnectedFromServer" + reason);
     
-        if(reason == NetDisconnectReason.Timeout && runner.IsServer)
-        {
-            NetworkPlayer.Local.OnPlayerDead();
-        }
+        //if(reason == NetDisconnectReason.Timeout)
+        //{
+        //    Debug.Log("You have been disconnected due to a timeout. Please check your internet connection and try again.");
+        //    if (NetworkPlayer.Local == null)
+        //        Debug.Log("NetworkPlayer.Local is null in OnDisconnectedFromServer");
+        //    else
+        //        NetworkPlayer.Local.OnPlayerDead();
+        //}
     }
 
     public void OnConnectRequest(NetworkRunner runner, NetworkRunnerCallbackArgs.ConnectRequest request, byte[] token) { Debug.Log("OnConnectRequest"); }

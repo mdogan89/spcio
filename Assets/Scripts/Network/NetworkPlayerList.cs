@@ -5,6 +5,11 @@ public class NetworkPlayerList : NetworkBehaviour
 {
     public static NetworkPlayerList Instance { get; private set; }
 
+    [Networked]
+    [Capacity(20)] // Sets the fixed capacity of the collection
+    [UnitySerializeField] // Show this private property in the inspector.
+    public NetworkDictionary<NetworkString<_32>, Color> PlayerNetworkDict { get; }
+
     [Networked, Capacity(10)]
     public NetworkArray<NetworkString<_32>> PlayerNetworkArray { get; }
 

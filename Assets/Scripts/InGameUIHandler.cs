@@ -1,5 +1,6 @@
 using Fusion;
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -19,6 +20,9 @@ public class InGameUIHandler : SimulationBehaviour
     Canvas joinGameCanvas;
 
     public TextMeshProUGUI[] textMeshProUGUIs;
+
+    private float lastUpdateTime = 0f;
+    private const float UPDATE_INTERVAL = 0.5f; // Her 0.5 saniyede bir güncelle
 
     private void Start()
     {
@@ -65,22 +69,36 @@ public class InGameUIHandler : SimulationBehaviour
     {
         joinGameCanvas.gameObject.SetActive(true);
     }
-    public void Highscores(NetworkArray<NetworkString<_32>> playerList)
+    public void Highscores(NetworkDictionary<NetworkString<_32>, Color> playerList)
     {
-        if (playerList.Length > 0 && playerList.Length < 11)
-        {
-            for (int i = 0; i < playerList.Length; i++)
+        if (Time.time - lastUpdateTime < UPDATE_INTERVAL) return;
+        lastUpdateTime = Time.time;
+
+        if (playerList.Count == 0) return;
+
+        var sortedPlayers = playerList.ToDictionary(x => x.Key, x => x.Value)
+            .OrderByDescending(x => 
             {
-              // NetworkPlayer player = playerList[i];
-              //  textMeshProUGUIs[i].text = player.nickName + " : " + player.size;
-              //  textMeshProUGUIs[i].color = player.spriteColor;
+                string scoreStr = x.Key.ToString().Split(':').Last().Trim();
+                int.TryParse(scoreStr, out int score);
+                return score;
+            })
+            .Take(10)
+            .ToList();
 
-                textMeshProUGUIs[i].text = playerList[i].ToString();
-
+        for (int i = 0; i < textMeshProUGUIs.Length; i++)
+        {
+            if (i < sortedPlayers.Count)
+            {
+                textMeshProUGUIs[i].text = sortedPlayers[i].Key.ToString();
+                textMeshProUGUIs[i].color = sortedPlayers[i].Value;
+            }
+            else
+            {
+                textMeshProUGUIs[i].text = "";
             }
         }
     }
-
     public void SetStatusText() {
         if (NetworkPlayer.Local != null) {
             statusText.text = NetworkPlayer.Local.playerState.ToString();

@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.Purchasing;
+using UnityEngine.UI;
 
 [Serializable]
 public class NonConsumableItem
@@ -16,6 +17,7 @@ public class ShopScript : MonoBehaviour , IStoreListener
     public bool showAds = true;
     public NonConsumableItem ncItem;
     IStoreController storeController;
+    [SerializeField] Button nonConsumableBtn;
 
     public void NonConsumable_Btn_Pressed()
     {
@@ -79,11 +81,9 @@ public class ShopScript : MonoBehaviour , IStoreListener
     {
         SetupBuilder();
     }
-
-    // Update is called once per frame
     void Update()
     {
-        
+        nonConsumableBtn.gameObject.SetActive(showAds);
     }
     public void OnInitializeFailed(InitializationFailureReason error)
     {

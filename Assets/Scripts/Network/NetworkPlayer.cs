@@ -68,7 +68,10 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
     [SerializeField] MeshRenderer _meshRenderer;
     [SerializeField] Canvas joysticks;
     [SerializeField] Canvas nickScoreCanvas;
-
+    [SerializeField] AudioSource foodAudioSource;
+    [SerializeField] AudioSource absorbAudioSource;
+    [SerializeField] AudioSource deathAudioSource;
+    [SerializeField] Animator _animator;
 
     void Awake()
     {
@@ -133,7 +136,9 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
             //kcc.Settings.ForcePredictedLookRotation = true;
         }
         if (Object.HasStateAuthority)
+        {
             spriteColor = Random.ColorHSV(0f, 1f, 0.7f, 1f, 0.5f, 1f);
+        }
         playerSpriteRenderer.material.color = spriteColor;
         ////ResetCells();
 
@@ -141,18 +146,6 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
         // ChangeDetector'ı doğru şekilde başlat
 
             _changeDetector = GetChangeDetector(ChangeDetector.Source.SimulationState);
-
-
-        //if (isBot && HasStateAuthority)
-        //{
-        //    nickName = Utils.GetRandomName();
-        ////    playerNickNameTM.text = nickName.ToString();
-        //}
-        //else if (HasStateAuthority)
-        //{
-        //    Debug.Log("NetworkPlayer Spawned with input authority" + PlayerManager.Instance.nick) ;
-        //    nickName = PlayerManager.Instance.nick;
-        //}
 
         if (HasInputAuthority && !isBot)
         {
@@ -240,6 +233,11 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
                 UpdateCamTarget();
                 //Vector3 worldDirection = kcc.LookRotation * new Vector3(input.Direction.x, 0, input.Direction.y);
                 Vector3 move = transform.TransformDirection(new Vector3(netInput.Direction.x, 0, netInput.Direction.y)) * speed * Runner.DeltaTime ;
+                // Ensure player does not move faster than the speed limit diagonally **necessary?**
+                if (move.magnitude > speed * Runner.DeltaTime)
+                {
+                    move = move.normalized * (speed * Runner.DeltaTime);
+                }
                 _rigidbody.Rigidbody.MovePosition(_rigidbody.Rigidbody.position + move);
 
                 //kcc.Move(move);
@@ -299,7 +297,8 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
         }
         if (_particleSystem != null)
         {
-            if (isMoving)
+            _particleSystem.startSize = transform.localScale.x;
+            if (isMoving & playerState == PlayerState.playing)
             {
                 if (!_particleSystem.isPlaying)
                     _particleSystem.Play();
@@ -322,7 +321,7 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
 
     private void UpdateCamTarget()
     {
-        camTarget.transform.rotation = Quaternion.Lerp(camTarget.transform.rotation, transform.rotation * Quaternion.Euler(15, 0, 0), Time.deltaTime * 5f); // Smoothly transition camera rotation
+        camTarget.transform.rotation = Quaternion.Lerp(camTarget.transform.rotation, transform.rotation * Quaternion.Euler(10, 0, 0), Time.deltaTime * 5f); // Smoothly transition camera rotation
     }
 
     private void OnTriggerEnter(Collider other)
@@ -332,6 +331,11 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
             OnCollectFood(12);
             other.gameObject.GetComponent<NetworkTransform>().transform.position = Utils.GetRandomPosition();
         }
+
+        if(other.CompareTag("Cell")&& HasInputAuthority)
+            foodAudioSource.Play();
+        if(other.CompareTag("Cell"))
+            _animator.SetTrigger("Food");
 
         if (other.GetComponent<NetworkPlayer>() && HasStateAuthority)
         {
@@ -348,17 +352,15 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
                     foodFromOtherPlayer = 20;
                 }
                 player.OnCollectFood((ushort)foodFromOtherPlayer);
-
                 OnPlayerDead();
-                //  Runner.Despawn(player.Object);
             }
-            //else
-            //{
-            //    Player oPlayer = other.GetComponentInParent<Player>();
-            //    oPlayer.OnPlayerDead();
-            //    // Runner.Despawn(oPlayer.Object);
-            //}
         }
+        if (other.GetComponent<NetworkPlayer>() && HasInputAuthority && other.GetComponent<NetworkPlayer>().size < size)
+            absorbAudioSource.Play();
+        else if (other.GetComponent<NetworkPlayer>() && HasInputAuthority && other.GetComponent<NetworkPlayer>().size > size)
+            deathAudioSource.Play();
+        else if(other.GetComponent<NetworkPlayer>() && other.GetComponent<NetworkPlayer>().size < size)
+            _animator.SetTrigger("Absorb");
     }
 
     public void PlayerLeft(PlayerRef player)
@@ -370,106 +372,6 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
 
         }
 
-    
-
-    //[Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
-    //public void RPC_OnMenuButtonClicked()
-    //{
-    //    if (Object == null)
-    //    {
-    //        Debug.Log("RPC_OnMenuButtonClicked: Object is null");
-    //        return;
-    //    }
-    //    Debug.Log("RPC_OnMenuButtonClicked called" + Object.name);
-
-    //    if (Runner != null && Runner.IsServer)
-    //    {
-    //        Debug.Log("RPC_OnMenuButtonClicked: Despawning player " + Object.name);
-    //        Runner.Despawn(Object);
-    //        Debug.Log("Player despawned: " + Object.name == null);
-    //    }
-    //    if (Runner.IsClient)
-    //    {
-    //        Debug.Log("RPC_OnMenuButtonClicked: Client is trying to leave the game");
-    //        Runner.Shutdown();
-    //    }
-    //    SceneManager.LoadScene(0, LoadSceneMode.Single);
-    //    var manager = GameObject.Find("PlayerManager");
-    //    if (manager != null)
-    //        Destroy(manager); // Destroy the PlayerManager instance if it exists
-    //}
-
-    //public void OnMenuButtonClicked()
-    //{
-    //    Debug.Log("OnMenuButtonClicked");
-
-    //    // (NetworkPlayer localPlayer) = Runner.GetPlayer(Object.InputAuthority);
-
-    //    if (Object.HasInputAuthority)
-    //    {
-    //        Debug.Log("OnMenuButtonClicked: Local player is despawning");
-    //        NetworkRunner _runner = FindAnyObjectByType<NetworkRunner>();
-    //        if (_runner == null)
-    //        {
-    //            Debug.LogError("OnMenuButtonClicked: NetworkRunner is null");
-    //            return;
-    //        }
-
-    //        else if (_runner.IsClient)
-    //        {
-    //            Debug.Log("OnMenuButtonClicked: Client is trying to leave the game");
-    //            Runner.Shutdown();
-    //        }
-    //        else
-    //        {
-    //            Debug.Log("OnMenuButtonClicked: Not local player, cannot despawn");
-
-    //        }
-    //    }
-
-
-
-
-
-
-
-
-
-
-
-            //if (HasStateAuthority)
-            //{
-            //    Debug.Log("OnMenuButtonClicked: Server is despawning player " + NetworkPlayer.Local.Object.Name);
-            //    NetworkRunner _runner = FindAnyObjectByType<NetworkRunner>();
-            //    if (_runner == null)
-            //    {
-            //        Debug.LogError("OnMenuButtonClicked: NetworkRunner is null");
-            //        return;
-            //    }
-            //    else if (_runner.IsServer) {
-            //        Debug.Log("OnMenuButtonClicked: ServerRunner is despawning player " + NetworkPlayer.Local.Object.Name);
-            //        _runner.Despawn(NetworkPlayer.Local.Object);
-            //    }
-
-            //    else if (_runner.IsClient)
-            //    {
-            //        Debug.Log("OnMenuButtonClicked: Client is trying to leave the game");
-            //        Runner.Shutdown();
-            //    }
-
-
-            //public void OnMenuButtonClicked(PlayerRef player)
-            //{
-            //    Debug.Log($"OnMenuButtonClicked called for player: {player}");
-            //    var manager = GameObject.Find("PlayerManager");
-            //    if (manager != null)
-            //        Destroy(manager); // Destroy the PlayerManager instance if it exists
-            //    SceneManager.LoadScene(0, LoadSceneMode.Single);
-            //    PlayerLeft(player);
-            //}
-
-
-        //}
     public void ChangeNickname(string newNick)
     {
         if (string.IsNullOrWhiteSpace(newNick))
