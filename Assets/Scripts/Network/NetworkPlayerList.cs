@@ -13,6 +13,12 @@ public class NetworkPlayerList : NetworkBehaviour
     [Networked, Capacity(10)]
     public NetworkArray<NetworkString<_32>> PlayerNetworkArray { get; }
 
+    [UnitySerializeField]
+    [Networked, Capacity(20)]
+    public NetworkDictionary<Vector3, ushort> PlayerPositions { get; }
+
+
+
     public override void Spawned()
     {
         if (Instance != null && Instance != this)

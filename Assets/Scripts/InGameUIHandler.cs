@@ -4,7 +4,7 @@ using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-public class InGameUIHandler : SimulationBehaviour
+public class InGameUIHandler : MonoBehaviour
 {
     [SerializeField]
     TextMeshProUGUI statusText;
@@ -16,8 +16,7 @@ public class InGameUIHandler : SimulationBehaviour
     TextMeshProUGUI rttText;
 
     [Header("Canvas")]
-    [SerializeField]
-    Canvas joinGameCanvas;
+    [SerializeField] Canvas joinGameCanvas;
 
     public TextMeshProUGUI[] textMeshProUGUIs;
 
@@ -67,6 +66,12 @@ public class InGameUIHandler : SimulationBehaviour
     }
     public void OnPlayerDied()
     {
+        Debug.Log("InGameUIHandler.OnPlayerDied() called");
+        if (joinGameCanvas == null)
+        {
+            Debug.Log("joinGameCanvas is null!");
+            return;
+        }
         joinGameCanvas.gameObject.SetActive(true);
     }
     public void Highscores(NetworkDictionary<NetworkString<_32>, Color> playerList)

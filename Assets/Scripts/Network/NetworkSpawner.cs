@@ -77,6 +77,7 @@ public class NetworkSpawner : SimulationBehaviour, INetworkRunnerCallbacks
 
         if (Runner.IsServer) { 
             UpdatePlayerNetworkArray();
+            UpdatePlayerPositionDict();
            // Debug.Log("UpdatePlayerNetworkArray called from FixedUpdateNetwork" + NetworkPlayerList.PlayerNetworkArray.Length);
         }
     }
@@ -199,6 +200,27 @@ public class NetworkSpawner : SimulationBehaviour, INetworkRunnerCallbacks
         }
     }
 
+    public void UpdatePlayerPositionDict()
+    {
+        if (!Runner.IsServer || NetworkPlayerList.Instance == null) return;
+        NetworkPlayerList.Instance.PlayerPositions.Clear();
+        foreach (var player in Players)
+        {
+            if (player != null && player.Object != null && player.playerState == NetworkPlayer.PlayerState.playing)
+            {
+                Vector3 roundedPosition = new Vector3(
+                    Mathf.Round(player.transform.position.x),
+                    Mathf.Round(player.transform.position.y),
+                    Mathf.Round(player.transform.position.z)
+                );
+                if (NetworkPlayerList.Instance.PlayerPositions.ContainsKey(roundedPosition)) { 
+                    NetworkPlayerList.Instance.PlayerPositions.Remove(roundedPosition);
+                }
+                NetworkPlayerList.Instance.PlayerPositions.Add(roundedPosition, player.size);
+            }
+        }
+    }
+
     public void OnInput(NetworkRunner runner, NetworkInput input)
     {
 
@@ -262,15 +284,15 @@ public class NetworkSpawner : SimulationBehaviour, INetworkRunnerCallbacks
         
         
         Debug.Log("OnDisconnectedFromServer" + reason);
-    
-        //if(reason == NetDisconnectReason.Timeout)
-        //{
-        //    Debug.Log("You have been disconnected due to a timeout. Please check your internet connection and try again.");
-        //    if (NetworkPlayer.Local == null)
-        //        Debug.Log("NetworkPlayer.Local is null in OnDisconnectedFromServer");
-        //    else
-        //        NetworkPlayer.Local.OnPlayerDead();
-        //}
+
+        if (reason == NetDisconnectReason.Timeout)
+        {
+            Debug.Log("You have been disconnected due to a timeout. Please check your internet connection and try again.");
+            if (NetworkPlayer.Local == null)
+                Debug.Log("NetworkPlayer.Local is null in OnDisconnectedFromServer");
+            else
+                NetworkPlayer.Local.OnPlayerDead();
+        }
     }
 
     public void OnConnectRequest(NetworkRunner runner, NetworkRunnerCallbackArgs.ConnectRequest request, byte[] token) { Debug.Log("OnConnectRequest"); }
