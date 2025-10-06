@@ -37,11 +37,11 @@ public class SettingsManager : MonoBehaviour
 
     }
 
-    public void OnSkinSelected(int skinId)
-    {
-        PlayerManager.Instance.skinId = skinId;
-        PlayerPrefs.SetInt("SkinId", skinId); // Save the selected skin ID to PlayerPrefs
-    }
+    //public void OnSkinSelected(int skinId)
+    //{
+    //    PlayerManager.Instance.skinId = skinId;
+    //    PlayerPrefs.SetInt("SkinId", skinId); // Save the selected skin ID to PlayerPrefs
+    //}
 
     public void OnMapSelected(int mapId)
     {
@@ -152,7 +152,7 @@ public class SettingsManager : MonoBehaviour
 
     void LoadSettings()
     {
-        skinToggleGroup.GetComponentInChildren<Transform>().Find($"SkinToggle{PlayerManager.Instance.skinId}").GetComponent<Toggle>().isOn = true;
+        //skinToggleGroup.GetComponentInChildren<Transform>().Find($"SkinToggle{PlayerManager.Instance.skinId}").GetComponent<Toggle>().isOn = true;
         mapToggleGroup.GetComponentsInChildren<Toggle>()[PlayerManager.Instance.mapId].isOn = true; // Set the selected map toggle based on saved map ID    
         botLevelToggleGroup.GetComponentsInChildren<Toggle>()[PlayerManager.Instance.botLevel].isOn = true; // Set the selected bot level toggle based on saved bot level
         playerNumberSlider.value = PlayerManager.Instance.numberOfBots; // Set the slider value for number of bots based on saved value

@@ -40,7 +40,7 @@ public class NetworkSpawner : SimulationBehaviour, INetworkRunnerCallbacks
 
     public override void FixedUpdateNetwork()
     {
-        if (botRespawnTimer.Expired(Runner))
+        if (botRespawnTimer.Expired(Runner) && Runner.ActivePlayers.Count()>0)
         {
             int aliveBots = 0;
 
@@ -58,8 +58,6 @@ public class NetworkSpawner : SimulationBehaviour, INetworkRunnerCallbacks
                 }
             }
             int numberOfBotsToSpawn = desiredNumberOfPlayers - Runner.SessionInfo.PlayerCount - aliveBots;
-
-            Debug.Log($"Bot respawn, number of bots to spawn {numberOfBotsToSpawn} any not dead bot");
 
             if (numberOfBotsToSpawn > 0 && anyDeadBot != null)
             {
@@ -104,11 +102,11 @@ public class NetworkSpawner : SimulationBehaviour, INetworkRunnerCallbacks
 
     void SpawnBots()
     {
-        if (Runner.SessionInfo.PlayerCount < desiredNumberOfPlayers + botList.Count && Runner.IsServer)
+        if (Runner.SessionInfo.PlayerCount < desiredNumberOfPlayers + botList.Count && Runner.IsServer && Runner.ActivePlayers.Count()>0)
         {
             int numberOfBotsToSpawn = desiredNumberOfPlayers - Runner.SessionInfo.PlayerCount - botList.Count;
 
-            Debug.Log($"Number of bots to spawn {numberOfBotsToSpawn}. Bot spawned count {botList.Count}. Player count {Runner.SessionInfo.PlayerCount}");
+            //Debug.Log($"Number of bots to spawn {numberOfBotsToSpawn}. Bot spawned count {botList.Count}. Player count {Runner.SessionInfo.PlayerCount}");
 
             for (int i = 0; i < numberOfBotsToSpawn; i++)
             {
@@ -132,7 +130,7 @@ public class NetworkSpawner : SimulationBehaviour, INetworkRunnerCallbacks
     {
         if (Runner.IsServer && Runner.SessionInfo.PlayerCount < desiredNumberOfPlayers)
         {
-            Debug.Log("Bot died,respawn required");
+            //Debug.Log("Bot died,respawn required");
 
             if (!botRespawnTimer.IsRunning)
             {
@@ -142,7 +140,7 @@ public class NetworkSpawner : SimulationBehaviour, INetworkRunnerCallbacks
     }
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
     {
-        Debug.Log("OnPlayerJoined");
+        //Debug.Log("OnPlayerJoined");
         if (runner.IsServer)
         {
             NetworkPlayer spawnedNetworkPlayer = runner.Spawn(playerPrefab, Utils.GetRandomPosition(), Quaternion.identity, player);
@@ -170,7 +168,7 @@ public class NetworkSpawner : SimulationBehaviour, INetworkRunnerCallbacks
             // Array'i temizle ve yeniden doldur
             ClearNetworkArray();
             UpdatePlayerNetworkArray();
-            Debug.Log($"NetworkDict updated after player joined. Length: {NetworkPlayerList.Instance.PlayerNetworkDict.Count}");
+            Debug.Log("OnPlayerJoined called from NetworkSpawner for: " + player + " " + spawnedNetworkPlayer.nickName + DateTime.Now.ToString());
         }
     }
 
@@ -228,7 +226,7 @@ public class NetworkSpawner : SimulationBehaviour, INetworkRunnerCallbacks
 
     public void OnConnectedToServer(NetworkRunner runner)
     {
-        Debug.Log("OnConnectedToServer");
+        //Debug.Log("OnConnectedToServer");
 
         if (runner.IsServer)
             NetworkPlayer.Local.playerState = NetworkPlayer.PlayerState.connected;
@@ -238,18 +236,17 @@ public class NetworkSpawner : SimulationBehaviour, INetworkRunnerCallbacks
     {
         if (runner.IsServer)
         {
-            Debug.Log($"Player {player} left. Updating arrays...");
+            NetworkPlayer leavingPlayer = Players.Find(p => p != null && p.Object != null && p.Object.InputAuthority == player);
+            Debug.Log($"Player {player} left. Updating arrays..." + leavingPlayer.nickName + DateTime.Now);
+
+
             Players.RemoveAll(p => p == null || p.Object == null || p.Object.InputAuthority == player);
             
             // Array'i temizle ve güncelle
             ClearNetworkArray();
             UpdatePlayerNetworkArray();
-            Debug.Log("OnPlayerLeft called from NetworkSpawner for: " + player);
             Debug.Log("Active players after despawn: " + runner.ActivePlayers.Count());
         }
-
-        Debug.Log("runner.IsServer : " + runner.IsServer + " runner.ActivePlayers.Count() : " + runner.ActivePlayers.Count());
-
 
         if (runner.IsServer && runner.ActivePlayers.Count() <= 0)
         {
@@ -266,10 +263,19 @@ public class NetworkSpawner : SimulationBehaviour, INetworkRunnerCallbacks
             if(botList.Count > 0)
                 botList.Clear();
             ClearNetworkArray();
-            Debug.Log("Active players after despawning bots: " + runner.ActivePlayers.Count());
-            Debug.Log("Bots despawned" + botList.Count);
-            Debug.Log("Players despawned" + Players.Count);
+            //Debug.Log("Active players after despawning bots: " + runner.ActivePlayers.Count());
+            //Debug.Log("Bots despawned" + botList.Count);
+            //Debug.Log("Players despawned" + Players.Count);
             isBotsSpawned = false;
+
+            NetworkObject[] cells = GameObject.FindGameObjectsWithTag("Cell").Select(go => go.GetComponent<NetworkObject>()).ToArray();
+            foreach (var cell in cells)
+            {
+                if (cell != null)
+                {
+                    runner.Despawn(cell);
+                }
+            }
         }
     }
     public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input) { }
@@ -280,10 +286,21 @@ public class NetworkSpawner : SimulationBehaviour, INetworkRunnerCallbacks
         Debug.Log("OnShutdown" + shutdownReason);
     }
 
-    public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason) { 
-        
-        
-        Debug.Log("OnDisconnectedFromServer" + reason);
+    public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason)
+    { 
+        Debug.Log("OnDisconnectedFromServer " + reason);
+
+        if (gameUIHandler == null)
+        {
+            Debug.LogError("gameUIHandler is null in OnDisconnectedFromServer");
+            return;
+        }
+        if (NetworkPlayer.Local == null)
+            Debug.Log("NetworkPlayer.Local is null in OnDisconnectedFromServer");
+        else
+            NetworkPlayer.Local.OnPlayerDead();
+        // Her türlü baðlantý kopmasý durumunda ana menüye dön ***
+           gameUIHandler.OnMenuButtonClicked();
 
         if (reason == NetDisconnectReason.Timeout)
         {
@@ -295,9 +312,9 @@ public class NetworkSpawner : SimulationBehaviour, INetworkRunnerCallbacks
         }
     }
 
-    public void OnConnectRequest(NetworkRunner runner, NetworkRunnerCallbackArgs.ConnectRequest request, byte[] token) { Debug.Log("OnConnectRequest"); }
+    public void OnConnectRequest(NetworkRunner runner, NetworkRunnerCallbackArgs.ConnectRequest request, byte[] token) { }
 
-    public void OnConnectFailed(NetworkRunner runner, NetAddress remoteAddress, NetConnectFailedReason reason) { Debug.Log("OnConnectFailed"); }
+    public void OnConnectFailed(NetworkRunner runner, NetAddress remoteAddress, NetConnectFailedReason reason) { Debug.Log("OnConnectFailed" + reason); }
 
     public void OnUserSimulationMessage(NetworkRunner runner, SimulationMessagePtr message) { }
 

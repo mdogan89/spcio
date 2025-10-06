@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Purchasing;
 using UnityEngine.UI;
@@ -12,20 +14,47 @@ public class NonConsumableItem
     public float price;
 }
 
+[Serializable]
+public class ConsumableItem
+{
+    public string Name;
+    public string Id;
+    public string desc;
+    public float price;
+}
+
 public class ShopScript : MonoBehaviour , IStoreListener
 {
     public bool showAds = true;
     public NonConsumableItem ncItem;
+    public ConsumableItem cItem;
     IStoreController storeController;
     [SerializeField] Button nonConsumableBtn;
+    [SerializeField] TextMeshProUGUI coinTxt;
+    [SerializeField] Button consumableBtn;
+
+    public Data data;
+    public Payload payload;
+    public PayloadData payloadData;
+
 
     public void NonConsumable_Btn_Pressed()
     {
         storeController.InitiatePurchase(ncItem.Id);
     }
+
+    public void Consumable_Btn_Pressed()
+    {
+        storeController.InitiatePurchase(cItem.Id);
+    } 
+
+
+
+
     void SetupBuilder()
     {
         var builder = ConfigurationBuilder.Instance(StandardPurchasingModule.Instance());
+        builder.AddProduct(cItem.Id, ProductType.Consumable, new IDs { { cItem.Id, GooglePlay.Name }, { cItem.Id, AppleAppStore.Name } });
         builder.AddProduct(ncItem.Id, ProductType.NonConsumable, new IDs
         {
             { ncItem.Id, GooglePlay.Name },
@@ -68,6 +97,21 @@ public class ShopScript : MonoBehaviour , IStoreListener
             Debug.Log("Purchase successful: " + product.definition.id);
             return PurchaseProcessingResult.Complete;
         }
+        
+        else if(product.definition.id == cItem.Id)
+        {
+            string receipt = product.receipt;
+            data = JsonUtility.FromJson<Data>(receipt);
+            payload = JsonUtility.FromJson<Payload>(data.Payload);
+            payloadData = JsonUtility.FromJson<PayloadData>(payload.json);
+
+            int quantity = payloadData.quantity;
+            for (int i = 0; i < quantity; i++)
+            {
+                AddCoins(100); // Assuming each consumable purchase gives 100 coins
+            }
+            return PurchaseProcessingResult.Complete;
+        }
         else
         {
             Debug.Log("Purchase failed: Unknown product ID");
@@ -80,11 +124,13 @@ public class ShopScript : MonoBehaviour , IStoreListener
     void Start()
     {
         SetupBuilder();
+        int coins = PlayerPrefs.GetInt("totalCoins");
+        coinTxt.text = coins.ToString();
     }
-    void Update()
-    {
-        nonConsumableBtn.gameObject.SetActive(showAds);
-    }
+    //void Update()
+    //{
+    //    nonConsumableBtn.gameObject.SetActive(showAds);
+    //}
     public void OnInitializeFailed(InitializationFailureReason error)
     {
         Debug.LogError("ShopScript: OnInitializeFailed called with error: " + error);
@@ -113,6 +159,7 @@ public class ShopScript : MonoBehaviour , IStoreListener
     }
     void RemoveAds()
     {
+        nonConsumableBtn.gameObject.SetActive(false);
         showAds = false;
         PlayerManager.Instance.showAds = false; // Update PlayerManager to reflect ad removal
         Debug.Log("Ads removed");
@@ -123,4 +170,58 @@ public class ShopScript : MonoBehaviour , IStoreListener
         PlayerManager.Instance.showAds = true; // Update PlayerManager to reflect ad showing
         Debug.Log("Ads shown");
     }
+
+    void AddCoins(int amount)
+    {
+        int currentCoins = PlayerPrefs.GetInt("totalCoins", 0);
+        currentCoins += amount;
+        PlayerPrefs.SetInt("totalCoins", currentCoins);
+        coinTxt.text = currentCoins.ToString();
+        Debug.Log("Added " + amount + " coins. Total now: " + currentCoins);
+    }
+
+
+
 }
+[Serializable]
+public class SkuDetails
+{
+    public string productId;
+    public string type;
+    public string title;
+    public string name;
+    public string iconUrl;
+    public string price;
+    public long price_amount_micros;
+    public string price_currency_code;
+    public string description;
+    public string skuDetailsToken;
+}
+[Serializable]
+public class Data
+{
+    public string Payload;
+    public string Store;
+    public string TransactionID;
+}
+[Serializable]
+public class Payload
+{
+    public string json;
+    public string signature;
+    public List<SkuDetails> skuDetails;
+    public PayloadData payloadData;
+}
+[Serializable]
+public class PayloadData
+{
+    public string orderId;
+    public string packageName;
+    public string productId;
+    public long purchaseTime;
+    public int purchaseState;
+    public string purchaseToken;
+    public int quantity;
+    public bool acknowledged;
+}
+

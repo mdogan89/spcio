@@ -77,20 +77,28 @@ public class PlayerManager : MonoBehaviour
     Slider volumeSlider; // Slider for adjusting volume
     Slider brightnessSlider; // Slider for adjusting brightness
     TMP_Dropdown musicDropdown;
+    public Button multiplayerButton; // Inspector'dan atayabilirsin
+
+    public Material[] skins;
+
+    public bool dailyPotionClaimed = true;
+    public bool dailyPotionActivated = false;
+
+    [SerializeField] Button dailyPotionActiveButton;
+    [SerializeField] GameObject dailyPotionParent;
+    [SerializeField] Button pauseButton;
+
+    public float potionTimer = 0f;
+    public TextMeshProUGUI potionTimerText;
 
 
-
-
+    public GameObject shopPanel;
 
     void Awake()
     {
 #if UNITY_SERVER
         SceneManager.LoadScene("Multiplayer");
 #endif
-
-
-
-
 
         if (Instance == null)
         {
@@ -115,6 +123,48 @@ public class PlayerManager : MonoBehaviour
         {
             Camera.main.GetComponent<AudioSource>().volume = volume / 5; // Set the audio source volume based on the saved volume level
         }
+
+        if (PlayerPrefs.HasKey("lastLoginDate"))
+        {
+            string lastLoginDate = PlayerPrefs.GetString("lastLoginDate");
+            string currentDate = System.DateTime.Now.ToString("yyyyMMdd");
+            if (lastLoginDate != currentDate)
+            {
+                dailyPotionClaimed = true; // Reset the daily potion claim status if the date has changed
+                PlayerPrefs.SetInt("dailyPotionClaimed", 1);
+                int smallPotions = PlayerPrefs.GetInt("smallPotions");
+                smallPotions += 1; // Add one small potion for daily login
+                PlayerPrefs.SetInt("smallPotions", smallPotions);
+            }
+        }
+        else
+        {
+            dailyPotionClaimed = true; // No previous login date, so reset the daily potion claim status
+            PlayerPrefs.SetInt("dailyPotionClaimed", 1);
+        }
+
+        if (PlayerPrefs.GetInt("dailyPotionClaimed") == 1)
+        {
+            dailyPotionParent.SetActive(true);
+        }
+        else {             
+            dailyPotionParent.SetActive(false);
+        }
+
+        if (PlayerPrefs.HasKey("potionTimer"))
+        {
+            if (PlayerPrefs.GetFloat("potionTimer") > 0)
+            {
+                potionTimer = PlayerPrefs.GetFloat("potionTimer"); // Load the current potion timer value
+            }
+        }
+        else
+        {
+            potionTimer = 0f; // Default potion timer value
+        }
+
+
+
     }
     private void Start()
     {
@@ -122,6 +172,8 @@ public class PlayerManager : MonoBehaviour
         {
             Camera.main.GetComponent<AudioSource>().volume = volume / 5; // Set the audio source volume based on the saved volume level
         }
+        CheckInternetAndSetMultiplayerButton();
+
     }
     void Update()
     {
@@ -145,7 +197,7 @@ public class PlayerManager : MonoBehaviour
         //{
         //    nick = nickInputField.text; // Update the input field with the current nickname
         //}
-        if (SceneManager.GetActiveScene().buildIndex == 0 || SceneManager.GetActiveScene().buildIndex ==3)
+        if (SceneManager.GetActiveScene().buildIndex == 0 || SceneManager.GetActiveScene().buildIndex == 3)
         {
             RenderSettings.skybox.SetFloat("_Rotation", -Time.time * 0.3f); // Rotate the skybox over time in the title scene
         }
@@ -158,9 +210,79 @@ public class PlayerManager : MonoBehaviour
         else if (music && Camera.main != null)
             Camera.main.GetComponent<AudioSource>().UnPause(); // Pause the main camera's audio source if music is disabled
         PauseMenu();
+
+        CheckInternetAndSetMultiplayerButton();
+
+        if (potionTimer > 0)
+        {
+            if (dailyPotionActivated) { 
+                dailyPotionActiveButton.GetComponentInChildren<TextMeshProUGUI>().text = "Activated(" + potionTimer.ToString("F0") + "s)";
+                dailyPotionActiveButton.interactable = false;
+            }
+            potionTimer -= Time.deltaTime;
+            showAds = false;
+        }
+        else if (potionTimer <= 0)
+        {
+            if(dailyPotionActivated)
+            {
+                dailyPotionActiveButton.GetComponentInChildren<TextMeshProUGUI>().text = "Ended";
+                dailyPotionActivated = false;
+                //dailyPotionClaimed = true;
+                dailyPotionActiveButton.interactable = false;
+                //PlayerPrefs.SetInt("dailyPotionClaimed", 1);
+            }
+            showAds = true;
+            potionTimer = 0;
+        }
+        else if (potionTimer <= 0 )
+        {
+            if ( SceneManager.GetActiveScene().buildIndex == 0 && !dailyPotionActivated ) { 
+            dailyPotionActiveButton.GetComponentInChildren<TextMeshProUGUI>().text = "Activate";
+            }
+            potionTimer = 0;
+            showAds = true;
+        }
+
+        if (potionTimerText != null)
+        {
+            if (potionTimer > 0)
+            {
+                potionTimerText.text = potionTimer.ToString("F0");
+            }
+            else
+            {
+                potionTimerText.text = "000";
+            }
+        }
+
+
+        if ( SceneManager.GetActiveScene().buildIndex == 0 )
+        {
+            if (Input.GetMouseButtonDown(0))
+            {
+                Debug.Log("dailyPotionParent clicked");
+                Vector2 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                RectTransform rectTransform = dailyPotionActiveButton.GetComponent<RectTransform>();
+
+                if (RectTransformUtility.RectangleContainsScreenPoint(rectTransform, Input.mousePosition))
+                {
+                    Debug.Log("dailyPotionActiveButton clicked");
+                    if (!dailyPotionActivated)
+                    {
+                        OnDailyPotionActivated();
+                    }
+                }
+                else
+                {
+                    OnDailyPotionClosed();
+                }
+
+            }
+        }
+
     }
-
-
     //public void OnSongChanged(int value)
     //{
     //    musicId = value; // Update the music ID based on the dropdown selection
@@ -235,6 +357,35 @@ public class PlayerManager : MonoBehaviour
         SceneManager.LoadScene(4); // Load the Multiplayer scene
     }
 
+    public void OnShopButtonClicked()
+    {
+        titlePanel.SetActive(false);
+        shopPanel.SetActive(true);
+    }
+
+    public void OnShopCloseButtonClicked()
+    {
+        titlePanel.SetActive(true);
+        shopPanel.SetActive(false);
+    }
+
+
+    public void OnDailyPotionActivated()
+    {
+        dailyPotionActivated = true;
+        dailyPotionClaimed = false; // Mark the daily potion as claimed
+        PlayerPrefs.SetInt("dailyPotionClaimed", 0);
+        potionTimer += 300f;
+        potionTimer -= Time.deltaTime;
+        int smallPotions = PlayerPrefs.GetInt("smallPotions");
+        smallPotions -= 1; // Add one small potion for daily login
+        PlayerPrefs.SetInt("smallPotions", smallPotions);
+    }
+
+    public void OnDailyPotionClosed()
+    {
+        dailyPotionParent.SetActive(false);
+    }
 
 
 
@@ -338,7 +489,15 @@ public class PlayerManager : MonoBehaviour
         }
     }
 
+    private void OnDestroy()
+    {
+        if(potionTimer >0)
+            PlayerPrefs.SetFloat("potionTimer", potionTimer); // Save the current potion timer value
+        else
+            PlayerPrefs.SetFloat("potionTimer", 0f); // Reset the potion timer if it's not active
 
+        PlayerPrefs.SetString("lastLoginDate", System.DateTime.Now.ToString("yyyyMMdd")); // Save the current date as the last login date
+    }
 
     void LoadSettings()
     {
@@ -381,7 +540,7 @@ public class PlayerManager : MonoBehaviour
         }
         else
         {
-            skinId = 0;
+            skinId = 3;
         }
         if (PlayerPrefs.HasKey("MapId"))
         {
@@ -561,6 +720,21 @@ public class PlayerManager : MonoBehaviour
         else
         {
             powerup = true; // Default powerup setting
+        }
+    }
+
+    private void CheckInternetAndSetMultiplayerButton()
+    {
+        if (multiplayerButton == null)
+            return;
+
+        if (Application.internetReachability == NetworkReachability.NotReachable)
+        {
+            multiplayerButton.interactable = false;
+        }
+        else
+        {
+            multiplayerButton.interactable = true;
         }
     }
 }

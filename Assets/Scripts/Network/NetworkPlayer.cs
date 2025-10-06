@@ -1,5 +1,6 @@
 ﻿using Fusion;
 using Fusion.Addons.Physics;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -60,6 +61,9 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
     private MaterialPropertyBlock _propBlock;
     private Material _instanceMaterial; // Her bot için ayrı materyal örneği
 
+    [Networked]
+    public int skinId { get ; set; }
+
     void Awake()
     {
        
@@ -92,16 +96,10 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
             }
         }
         _propBlock = new MaterialPropertyBlock();
-        if (_meshRenderer != null)
-        {
-            // Her bot için ayrı materyal örneği oluştur
-            _instanceMaterial = new Material(_meshRenderer.sharedMaterial);
-            _meshRenderer.material = _instanceMaterial;
-        }
     }
     void Start()
     {
-        inputDirection = new Vector2(Random.Range(-1f, 1f), Random.Range(-1f, 1f));
+        inputDirection = new Vector2(UnityEngine.Random.Range(-1f, 1f), UnityEngine.Random.Range(-1f, 1f));
         Reset();
         UpdateSize();
     }
@@ -117,7 +115,7 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
             ResetPlayer();
         }
         Runner.SetPlayerObject(Object.InputAuthority, Object);
-        Debug.Log("NetworkPlayer Spawned with InputAuthority: " + Object.InputAuthority + " " + Object.Id);
+        //Debug.Log("NetworkPlayer Spawned with InputAuthority: " + Object.InputAuthority + " " + Object.Id);
         if (HasInputAuthority && !isBot)
         {
             inputManager = Runner.GetComponent<NetworkInputManager>();
@@ -126,14 +124,28 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
             CameraFollow.Singleton.SetTarget(camTarget);
             ChangeNickname(PlayerManager.Instance.nick);
             moveAudioSource.volume = PlayerManager.Instance.volume;
-            ChangeColor(PlayerManager.Instance.skinColor);
+            foodAudioSource.volume = PlayerManager.Instance.volume;
+            absorbAudioSource.volume = PlayerManager.Instance.volume;
+            deathAudioSource.volume = PlayerManager.Instance.volume;
+            
+            //ChangeSkin(PlayerManager.Instance.skinId);
+            _meshRenderer.material = PlayerManager.Instance.skins[PlayerManager.Instance.skinId];
+            _meshRenderer.material.color = Color.white;
+            if (PlayerManager.Instance.skinId == 3)
+                ChangeColor(UnityEngine.Random.ColorHSV(0f, 1f, 0.7f, 1f, 0.5f, 1f));
         }
-
+        if (_meshRenderer != null && isBot)
+        {
+            // Her bot için ayrı materyal örneği oluştur
+            _instanceMaterial = new Material(_meshRenderer.sharedMaterial);
+            _meshRenderer.material = _instanceMaterial;
+        }
         if (Object.HasStateAuthority && isBot)
         {
-            ChangeColor(Random.ColorHSV(0f, 1f, 0.7f, 1f, 0.5f, 1f));
+            skinId = 3; // Set skinId to 3 for bots
+            ChangeColor(UnityEngine.Random.ColorHSV(0f, 1f, 0.7f, 1f, 0.5f, 1f));
         }
-
+        
         UpdateColor(spriteColor);
 
         if ((HasInputAuthority && !isBot)||HasStateAuthority )
@@ -147,8 +159,11 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
 
     public override void FixedUpdateNetwork()
     {
-        _meshRenderer.material.color = spriteColor;
-
+        //if (!isBot) { 
+        //if(PlayerManager.Instance.skinId == 3)
+        //    _meshRenderer.material.color = spriteColor;
+        //}
+    
 
         //Movement **check if player inside the game area**
         if (GetInput(out NetInput netInput))
@@ -283,10 +298,19 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
             other.gameObject.GetComponent<NetworkTransform>().transform.position = Utils.GetRandomPosition();
         }
 
-        if (other.CompareTag("Cell") && HasInputAuthority)
-            foodAudioSource.Play();
         if (other.CompareTag("Cell"))
+        {
+            if (!isBot) { 
+                foodAudioSource.Play();
+                Debug.Log(nickName + " collected food and size is " + size + "at" + DateTime.Now.ToString());
+            }
             _animator.SetTrigger("Food");
+        }
+
+        if(!isBot && other.GetComponent<NetworkPlayer>() && other.GetComponent<NetworkPlayer>().size < size)
+        {
+            absorbAudioSource.Play();
+        }
 
         if (other.GetComponent<NetworkPlayer>() && HasStateAuthority)
         {
@@ -295,7 +319,8 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
                 return;
             if (player.size > size)
             {
-                Debug.Log(nickName + "collided with bigger player" + player.nickName);
+                if(!player.isBot || !isBot)
+                    Debug.Log(nickName + "collided with bigger player" + player.nickName + "at" + DateTime.Now);
                 float foodFromOtherPlayer = size * 0.1f;
 
                 if (foodFromOtherPlayer < 20)
@@ -303,20 +328,24 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
                     foodFromOtherPlayer = 20;
                 }
                 player.OnCollectFood((ushort)foodFromOtherPlayer);
+                if(!isBot)
+                {
+#if UNITY_ANDROID_API || UNITY_IOS
+                if (PlayerManager.Instance.vibration)
+                        Handheld.Vibrate();
+#endif
+                }
                 OnPlayerDead();
             }
-#if UNITY_ANDROID_API || UNITY_IOS
-            if (PlayerManager.Instance.vibration)
-                Handheld.Vibrate();
-#endif
+
         }
 
-        if (other.GetComponent<NetworkPlayer>() && HasInputAuthority && other.GetComponent<NetworkPlayer>().size < size && !isBot)
-            absorbAudioSource.Play();
-        else if (other.GetComponent<NetworkPlayer>() && HasInputAuthority && other.GetComponent<NetworkPlayer>().size > size && !isBot)
+        
+        if (other.GetComponent<NetworkPlayer>() && HasInputAuthority && other.GetComponent<NetworkPlayer>().size > size && !isBot)
         {
             deathAudioSource.Play();
-            //adSample.ShowInterstitialAd();
+            if (PlayerManager.Instance.showAds)
+                adSample.ShowInterstitialAd();
             //inGameUIHandler.joinGameCanvas.gameObject.SetActive(true);
         }
         else if (other.GetComponent<NetworkPlayer>() && other.GetComponent<NetworkPlayer>().size < size)
@@ -338,14 +367,10 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
         {
                 playerPositions.Add((p.Key, p.Value));
         }
-        Debug.Log("Find target called. player positions list count: " + playerPositions.Count);
-        Debug.Log("NetworkPlayerList.Instance.PlayerPositions count: " + NetworkPlayerList.Instance.PlayerPositions.Count);
         var closest = playerPositions.OrderBy(p => Vector3.Distance(transform.position, p.pos)).ToList()[1];
        
-        Debug.Log("Closest player found at " + closest.pos + " with size " + closest.size + "size was" + size + "pos: " + roundedPosition);
 
         if (closest.size<size){
-            Debug.Log("Closest player is smaller, targeting it");
             aiTarget = closest.pos;
             hasTarget = true;
             return;
@@ -353,7 +378,6 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
         else 
         {
             FindFood();
-            Debug.Log("No valid target found, looking for food");
         }
     }
 
@@ -403,10 +427,31 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
 
         }
 
+    public void ChangeSkin(int newSkinId)
+    {
+        RPC_ChangeSkin(newSkinId);
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    void RPC_ChangeSkin(int newSkinId, RpcInfo info = default)
+    {
+        if (!Object.HasStateAuthority) return;
+        skinId = newSkinId;
+        if (_meshRenderer != null && PlayerManager.Instance.skins != null && PlayerManager.Instance.skins.Length > skinId)
+        {
+            //List<Material> playerMaterial = new List<Material>() { PlayerManager.Instance.skins[PlayerManager.Instance.skinId] }; // Create a list to hold the map materials
+            //_meshRenderer.SetMaterials(playerMaterial); // Set the player's material based on the selected skin ID
+            _meshRenderer.material = PlayerManager.Instance.skins[skinId];
+        }
+    }
+
+
+
+
 
     public void ChangeColor(Color newColor)
     {
-        Debug.Log($"ChangeColor called with newColor: {newColor}");
+        //Debug.Log($"ChangeColor called with newColor: {newColor}");
         RPC_ChangeColor(newColor);
     }
 
@@ -422,7 +467,7 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
 
     void OnColorChanged(Color color)
     {
-        Debug.Log($"OnColorChanged: Player {nickName}, New Color: {color}");
+        //Debug.Log($"OnColorChanged: Player {nickName}, New Color: {color}");
         UpdateColor(color);
     }
 
@@ -431,9 +476,9 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
     {
         if (!Object.HasStateAuthority) return;
         
-        if (newColor == Color.black || newColor == Color.red)
+        if (newColor == Color.black)
         {
-            spriteColor = Random.ColorHSV(0f, 1f, 0.7f, 1f, 0.5f, 1f);
+            spriteColor = UnityEngine.Random.ColorHSV(0f, 1f, 0.7f, 1f, 0.5f, 1f);
         }
         else 
         {
@@ -457,7 +502,7 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
         {
             newNick = newNick.Substring(0, 16); // Trim to max length
         }
-        Debug.Log($"ChangeNickname called with newNick: {newNick}");
+        //Debug.Log($"ChangeNickname called with newNick: {newNick}");
         RPC_ChangeNickname(newNick);
     }
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
@@ -472,7 +517,7 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
         {
             newNick = newNick.Substring(0, 16); // Trim to max length
         }
-        Debug.Log($"[RPC] RPC_ChangeNickname {newNick}");
+        //Debug.Log($"[RPC] RPC_ChangeNickname {newNick}");
         this.nickName = newNick;
     }
 
@@ -495,18 +540,16 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
     }
     public void BotJoinGame()
     {
-        Debug.Log("Bot joined game");
+        //Debug.Log("Bot joined game");
         ResetPlayer();
     }
 
 
     void OnNickNameChanged(NetworkString<_16> nick)
     {
-
-        Debug.Log($"Nickname changed for player to {nick} for player {gameObject.name}");
-        Debug.Log($"OnNickNameChanged: {gameObject.name}, playerNickNameTM null? {playerNickNameTM == null}");
+        
+        //Debug.Log($"Nickname changed for player to {nick} for player {gameObject.name}");
         playerNickNameTM.text = nick.ToString();
-
     }           
 
     void OnSizeChanged(ushort s)
@@ -519,14 +562,13 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
 
     public void OnPlayerDead()
     {
-        Debug.Log($"OnPlayerDead called for player {nickName} with state {playerState}");
         _meshRenderer.enabled = false;
         playerState = PlayerState.dead;
-        Debug.Log("Player state set to dead" + playerState);
         if (!isBot)
         {
-            //adSample.ShowInterstitialAd();
-            Debug.Log("Player is not bot, showing join game canvas");
+            if(PlayerManager.Instance.showAds)
+                adSample.ShowInterstitialAd();
+            Debug.Log(nickName + "Player is not bot, showing ads" + PlayerManager.Instance.showAds);
             inGameUIHandler.OnPlayerDied();
         }
         if (isBot)
@@ -554,7 +596,9 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
 
             if (playerState == PlayerState.dead && Object.HasInputAuthority &&!isBot)
             {
-                //adSample.ShowInterstitialAd();
+                deathAudioSource.Play();
+                 if(PlayerManager.Instance.showAds)
+                 adSample.ShowInterstitialAd();
                 Debug.Log("Not bot player is dead, showing join game canvas" + playerState);
                 inGameUIHandler.OnPlayerDied();
             }
@@ -563,7 +607,7 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
 
     public void Reset()
     {
-        Debug.Log("Reset called"+nickName);
+        //Debug.Log("Reset called"+nickName);
         _meshRenderer.enabled = true;
         //working?
         size = 1;
