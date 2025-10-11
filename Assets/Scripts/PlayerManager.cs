@@ -59,8 +59,6 @@ public class PlayerManager : MonoBehaviour
 
     public bool music;
 
-    bool webglMusic = false;
-
     public bool easyFood;
 
     public int musicId;
@@ -94,6 +92,10 @@ public class PlayerManager : MonoBehaviour
 
     public GameObject shopPanel;
 
+    public bool adsRemoved = false;
+
+    public bool dailyPotionShowed = false;
+
     void Awake()
     {
 #if UNITY_SERVER
@@ -124,32 +126,7 @@ public class PlayerManager : MonoBehaviour
             Camera.main.GetComponent<AudioSource>().volume = volume / 5; // Set the audio source volume based on the saved volume level
         }
 
-        if (PlayerPrefs.HasKey("lastLoginDate"))
-        {
-            string lastLoginDate = PlayerPrefs.GetString("lastLoginDate");
-            string currentDate = System.DateTime.Now.ToString("yyyyMMdd");
-            if (lastLoginDate != currentDate)
-            {
-                dailyPotionClaimed = true; // Reset the daily potion claim status if the date has changed
-                PlayerPrefs.SetInt("dailyPotionClaimed", 1);
-                int smallPotions = PlayerPrefs.GetInt("smallPotions");
-                smallPotions += 1; // Add one small potion for daily login
-                PlayerPrefs.SetInt("smallPotions", smallPotions);
-            }
-        }
-        else
-        {
-            dailyPotionClaimed = true; // No previous login date, so reset the daily potion claim status
-            PlayerPrefs.SetInt("dailyPotionClaimed", 1);
-        }
-
-        if (PlayerPrefs.GetInt("dailyPotionClaimed") == 1)
-        {
-            dailyPotionParent.SetActive(true);
-        }
-        else {             
-            dailyPotionParent.SetActive(false);
-        }
+       
 
         if (PlayerPrefs.HasKey("potionTimer"))
         {
@@ -163,7 +140,7 @@ public class PlayerManager : MonoBehaviour
             potionTimer = 0f; // Default potion timer value
         }
 
-
+        dailyPotionShowed = PlayerPrefs.GetInt("dailyPotionShowed", 0) == 1;
 
     }
     private void Start()
@@ -174,9 +151,29 @@ public class PlayerManager : MonoBehaviour
         }
         CheckInternetAndSetMultiplayerButton();
 
+       
+
     }
     void Update()
     {
+        if(!dailyPotionShowed && SceneManager.GetActiveScene().buildIndex == 0 && !adsRemoved && ShopScript.receiptChecked)
+        {
+            SetDailyPotion();
+            dailyPotionShowed = true;
+            PlayerPrefs.SetInt("dailyPotionShowed", 1);
+        }
+        else if(SceneManager.GetActiveScene().buildIndex == 0 && adsRemoved && ShopScript.receiptChecked)
+        {
+            dailyPotionParent.SetActive(false);
+            dailyPotionShowed = true;
+            PlayerPrefs.SetInt("dailyPotionShowed", 1);
+            showAds = false;
+            dailyPotionActivated = false;
+            dailyPotionClaimed = false;
+            PlayerPrefs.SetInt("dailyPotionClaimed", 0);
+            PlayerPrefs.SetInt("smallPotions", 0);
+        }
+
         //if(Input.GetKeyDown(KeyCode.Escape) && SceneManager.GetActiveScene().buildIndex != 0)
         //{
         //    if (pauseMenuCanvas != null)
@@ -213,6 +210,8 @@ public class PlayerManager : MonoBehaviour
 
         CheckInternetAndSetMultiplayerButton();
 
+
+
         if (potionTimer > 0)
         {
             if (dailyPotionActivated) { 
@@ -246,16 +245,22 @@ public class PlayerManager : MonoBehaviour
 
         if (potionTimerText != null)
         {
-            if (potionTimer > 0)
+            if (ShopScript.showAds)
             {
-                potionTimerText.text = potionTimer.ToString("F0");
+                if (potionTimer > 0)
+                {
+                    potionTimerText.text = potionTimer.ToString("F0");
+                }
+                else
+                {
+                    potionTimerText.text = "000";
+                }
             }
             else
             {
-                potionTimerText.text = "000";
+                potionTimerText.text = "999";
             }
         }
-
 
         if ( SceneManager.GetActiveScene().buildIndex == 0 )
         {
@@ -281,8 +286,46 @@ public class PlayerManager : MonoBehaviour
 
             }
         }
-
     }
+
+    void SetDailyPotion()
+    {
+        if (PlayerPrefs.HasKey("lastLoginDate"))
+        {
+            string lastLoginDate = PlayerPrefs.GetString("lastLoginDate");
+            string currentDate = System.DateTime.Now.ToString("yyyyMMdd");
+            if (lastLoginDate != currentDate)
+            {
+                dailyPotionClaimed = true; // Reset the daily potion claim status if the date has changed
+                PlayerPrefs.SetInt("dailyPotionClaimed", 1);
+                int smallPotions = PlayerPrefs.GetInt("smallPotions");
+                smallPotions += 1; // Add one small potion for daily login
+                PlayerPrefs.SetInt("smallPotions", smallPotions);
+            }
+            else
+            {
+                dailyPotionClaimed = false;
+                PlayerPrefs.SetInt("dailyPotionClaimed", 0);
+            }
+        }
+        else
+        {
+            dailyPotionClaimed = true; // No previous login date, so reset the daily potion claim status
+            PlayerPrefs.SetInt("dailyPotionClaimed", 1);
+            int smallPotions = PlayerPrefs.GetInt("smallPotions");
+            smallPotions += 1; // Add one small potion for daily login
+            PlayerPrefs.SetInt("smallPotions", smallPotions);
+        }
+        if (PlayerPrefs.GetInt("dailyPotionClaimed") == 1)
+        {
+            dailyPotionParent.SetActive(true);
+        }
+        else
+        {
+            dailyPotionParent.SetActive(false);
+        }
+    }
+
     //public void OnSongChanged(int value)
     //{
     //    musicId = value; // Update the music ID based on the dropdown selection
@@ -372,14 +415,20 @@ public class PlayerManager : MonoBehaviour
 
     public void OnDailyPotionActivated()
     {
-        dailyPotionActivated = true;
+        int smallPotions = PlayerPrefs.GetInt("smallPotions");
+        if (smallPotions > 0) {
+            smallPotions -= 1; // Add one small potion for daily login
+            PlayerPrefs.SetInt("smallPotions", smallPotions);
+            dailyPotionActivated = true;
         dailyPotionClaimed = false; // Mark the daily potion as claimed
         PlayerPrefs.SetInt("dailyPotionClaimed", 0);
         potionTimer += 300f;
         potionTimer -= Time.deltaTime;
-        int smallPotions = PlayerPrefs.GetInt("smallPotions");
-        smallPotions -= 1; // Add one small potion for daily login
-        PlayerPrefs.SetInt("smallPotions", smallPotions);
+       
+        
+    }
+        else {             Debug.Log("No small potions available to activate.");
+        }
     }
 
     public void OnDailyPotionClosed()
@@ -679,7 +728,7 @@ public class PlayerManager : MonoBehaviour
         }
         else
         {
-            skinColor = Color.red; // Default
+            skinColor = Random.ColorHSV(0f, 1f, 0.7f, 1f, 0.5f, 1f); // Default
         }
         if(PlayerPrefs.HasKey("Volume"))
         {

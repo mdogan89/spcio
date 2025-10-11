@@ -5,7 +5,6 @@ using UnityEngine.UI;
 
 public class SettingsManager : MonoBehaviour
 {
-    [SerializeField] ToggleGroup skinToggleGroup; // Group for skin toggles
     [SerializeField] ToggleGroup mapToggleGroup; // Group for map toggles
     [SerializeField] ToggleGroup botLevelToggleGroup;
     [SerializeField] Slider playerNumberSlider; // Slider for number of bots
@@ -19,7 +18,7 @@ public class SettingsManager : MonoBehaviour
     [SerializeField] Slider moveSensitivitySlider; // Slider for move sensitivity
     [SerializeField] Slider timerSlider; // Slider for timer
     [SerializeField] ColorPicker.ColorPicker colorPicker; // GameObject for color picker
-    [SerializeField] Toggle foodToggle;
+    //[SerializeField] Toggle foodToggle;
     [SerializeField] Slider volumeSlider;
     [SerializeField] Toggle powerupToggle; // Toggle for power-ups
     void Awake()
@@ -120,23 +119,23 @@ public class SettingsManager : MonoBehaviour
         PlayerManager.Instance.timer = time;
         PlayerPrefs.SetFloat("Timer", time); // Save the timer setting to PlayerPrefs
     }
-    public void OnCustomSkinSelected(bool isOn)
-    {
-        //PlayerManager.Instance.customSkin = isOn;
-        colorPicker.gameObject.SetActive(isOn); // Show or hide the color picker based on the toggle state
-    }
-    public void OnColorPickerClosed() { 
+    //public void OnCustomSkinSelected(bool isOn)
+    //{
+    //    //PlayerManager.Instance.customSkin = isOn;
+    //    colorPicker.gameObject.SetActive(isOn); // Show or hide the color picker based on the toggle state
+    //}
+    //public void OnColorPickerClosed() { 
         
-        var currentSelectedColor = colorPicker.CurrentSelectedColor;
-        PlayerManager.Instance.skinColor = currentSelectedColor; // Save the selected color to PlayerManager
-        PlayerPrefs.SetString("SkinColor", ColorUtility.ToHtmlStringRGBA(currentSelectedColor)); // Save the selected color to PlayerPrefs
-        colorPicker.gameObject.SetActive(false); // Hide the color picker when closed
-    }
-    public void OnEasyFoodSelected(bool isOn)
-    {
-        PlayerManager.Instance.easyFood = isOn;
-        PlayerPrefs.SetInt("EasyFood", isOn ? 1 : 0); // Save the easy food setting to PlayerPrefs
-    }
+    //    var currentSelectedColor = colorPicker.CurrentSelectedColor;
+    //    PlayerManager.Instance.skinColor = currentSelectedColor; // Save the selected color to PlayerManager
+    //    PlayerPrefs.SetString("SkinColor", ColorUtility.ToHtmlStringRGBA(currentSelectedColor)); // Save the selected color to PlayerPrefs
+    //    colorPicker.gameObject.SetActive(false); // Hide the color picker when closed
+    //}
+    //public void OnEasyFoodSelected(bool isOn)
+    //{
+    //    PlayerManager.Instance.easyFood = isOn;
+    //    PlayerPrefs.SetInt("EasyFood", isOn ? 1 : 0); // Save the easy food setting to PlayerPrefs
+    //}
 
     public void OnVolumeChanged(float volume)
     {
@@ -165,14 +164,14 @@ public class SettingsManager : MonoBehaviour
         lookSensitivitySlider.value = PlayerManager.Instance.lookSensitivity; // Set the look sensitivity slider value based on saved value
         moveSensitivitySlider.value = PlayerManager.Instance.moveSensitivity; // Set the move sensitivity slider value based on saved value
         timerSlider.value = PlayerManager.Instance.timer; // Set the timer slider value based on saved value
-        colorPicker.CurrentSelectedColor = PlayerManager.Instance.skinColor; // Set the color picker to the saved
-        foodToggle.isOn = PlayerManager.Instance.easyFood; // Set the easy food toggle based on saved setting
+        //colorPicker.CurrentSelectedColor = PlayerManager.Instance.skinColor; // Set the color picker to the saved
+        //foodToggle.isOn = PlayerManager.Instance.easyFood; // Set the easy food toggle based on saved setting
         volumeSlider.value = PlayerManager.Instance.volume; // Set the volume slider value based on saved value
         powerupToggle.isOn = PlayerManager.Instance.powerup; // Set the power-up toggle based on saved setting
     }
     public void OnDefaultsButtonClicked()
     {
-        skinToggleGroup.GetComponentInChildren<Transform>().Find($"SkinToggle{0}").GetComponent<Toggle>().isOn = true;
+        //skinToggleGroup.GetComponentInChildren<Transform>().Find($"SkinToggle{0}").GetComponent<Toggle>().isOn = true;
         mapToggleGroup.GetComponentsInChildren<Toggle>()[0].isOn = true; // Set the selected map toggle based on saved map ID    
         botLevelToggleGroup.GetComponentsInChildren<Toggle>()[0].isOn = true; // Set the selected bot level toggle based on saved bot level
         playerNumberSlider.value = 50; // Set the slider value for number of bots based on saved value
@@ -185,9 +184,9 @@ public class SettingsManager : MonoBehaviour
         lookSensitivitySlider.value = 1.0f; // Set the look sensitivity slider value based on saved value
         moveSensitivitySlider.value = 1.0f; // Set the move sensitivity slider value based on saved value
         timerSlider.value = 120f; // Set the timer slider value based on saved value
-        colorPicker.CurrentSelectedColor = Color.red; // Set the color picker to the default color
-        colorPicker.gameObject.SetActive(false); // Hide the color picker when defaults are reset
-        foodToggle.isOn = true; // Set the easy food toggle based on saved setting
+        //colorPicker.CurrentSelectedColor = Color.red; // Set the color picker to the default color
+        //colorPicker.gameObject.SetActive(false); // Hide the color picker when defaults are reset
+        //foodToggle.isOn = true; // Set the easy food toggle based on saved setting
         volumeSlider.value = 0.2f; // Set the volume slider value based on saved value
         powerupToggle.isOn = true; // Set the power-up toggle based on saved setting
     }

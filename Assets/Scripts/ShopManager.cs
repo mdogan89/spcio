@@ -15,14 +15,17 @@ public class ShopManager : MonoBehaviour
     [SerializeField] TMP_InputField smallPotionsInputField;
     [SerializeField] int totalCoins;
     [SerializeField] Toggle smallPotionToggle;
+    [SerializeField] Button smallPotionBuyButton;
 
     [SerializeField] TextMeshProUGUI mediumPotionsText;
     [SerializeField] TMP_InputField mediumPotionsInputField;
     [SerializeField] Toggle mediumPotionToggle;
+    [SerializeField] Button mediumPotionBuyButton;
 
     [SerializeField] TextMeshProUGUI bigPotionsText;
     [SerializeField] TMP_InputField bigPotionsInputField;
     [SerializeField] Toggle bigPotionToggle;
+    [SerializeField] Button bigPotionBuyButton;
 
     [SerializeField] TextMeshProUGUI totalCoinsText;
     [SerializeField] Button earthBuyButton;
@@ -34,15 +37,50 @@ public class ShopManager : MonoBehaviour
     [SerializeField] Button marsBuyButton;
     [SerializeField] Toggle marsToggle;
 
+    [SerializeField] TextMeshProUGUI explanationTxt;
+
 
     void Start()
     {
         OnPotionsButtonClicked();
-        PlayerPrefs.SetInt("totalCoins", 500); // For testing purposes, set initial coins
+        //PlayerPrefs.SetInt("totalCoins", 500); // For testing purposes, set initial coins
     }
 
     void Update()
     {
+        if (!ShopScript.showAds)
+        {
+            smallPotionBuyButton.interactable = false;
+            mediumPotionBuyButton.interactable = false;
+            bigPotionBuyButton.interactable = false;
+
+            smallPotionsInputField.interactable = false;
+            mediumPotionsInputField.interactable = false;
+            bigPotionsInputField.interactable = false;
+
+            smallPotionToggle.interactable = false;
+            mediumPotionToggle.interactable = false;
+            bigPotionToggle.interactable = false;
+            explanationTxt.text = "You have already removed ads. Thank you for your support!";
+        }
+        else
+        {
+            smallPotionBuyButton.interactable = true;
+            mediumPotionBuyButton.interactable = true;
+            bigPotionBuyButton.interactable = true;
+            smallPotionsInputField.interactable = true;
+            mediumPotionsInputField.interactable = true;
+            bigPotionsInputField.interactable = true;
+            smallPotionToggle.interactable = true;
+            mediumPotionToggle.interactable = true;
+            bigPotionToggle.interactable = true;
+            explanationTxt.text = "Potions remove ads for a limited time.";
+        }
+
+
+
+
+
 
         totalCoins = PlayerPrefs.GetInt("totalCoins", 0);
         totalCoinsText.text = totalCoins.ToString();
@@ -127,6 +165,10 @@ public class ShopManager : MonoBehaviour
             earthToggle.isOn = false;
             marsToggle.isOn = false;
         }
+        //if(!moonToggle.isOn && !earthToggle.isOn && !marsToggle.isOn)
+        //{
+        //    PlayerManager.Instance.skinId = 3;
+        //}
     }
 
 
@@ -278,6 +320,7 @@ public class ShopManager : MonoBehaviour
         if (isOn)
         {
             PlayerManager.Instance.skinId = 2;
+            PlayerPrefs.SetInt("SkinId", 2);
             Debug.Log("Earth Skin Selected!");
         }
     }
@@ -310,6 +353,7 @@ public class ShopManager : MonoBehaviour
         if (isOn)
         {
             PlayerManager.Instance.skinId = 0;
+            PlayerPrefs.SetInt("SkinId", 0);
             Debug.Log("Moon Skin Selected!");
         }
     }
@@ -342,6 +386,7 @@ public class ShopManager : MonoBehaviour
         if (isOn)
         {
             PlayerManager.Instance.skinId = 1;
+            PlayerPrefs.SetInt("SkinId", 1);
             Debug.Log("Mars Skin Selected!");
         }
     }

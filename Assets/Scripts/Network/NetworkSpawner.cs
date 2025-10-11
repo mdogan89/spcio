@@ -146,7 +146,7 @@ public class NetworkSpawner : SimulationBehaviour, INetworkRunnerCallbacks
             NetworkPlayer spawnedNetworkPlayer = runner.Spawn(playerPrefab, Utils.GetRandomPosition(), Quaternion.identity, player);
             spawnedNetworkPlayer.playerState = NetworkPlayer.PlayerState.playing;
             
-            Players.Add(spawnedNetworkPlayer);
+                Players.Add(spawnedNetworkPlayer);
             for (int i = 0; i < desiredNumberOfPlayers; i++)
             {
                 NetworkObject networkCell = runner.Spawn(cellPrefab, Utils.GetRandomPosition(), Quaternion.identity);

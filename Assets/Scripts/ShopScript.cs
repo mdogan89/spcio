@@ -25,7 +25,8 @@ public class ConsumableItem
 
 public class ShopScript : MonoBehaviour , IStoreListener
 {
-    public bool showAds = true;
+    public static bool receiptChecked = false;
+    public static bool showAds = true;
     public NonConsumableItem ncItem;
     public ConsumableItem cItem;
     IStoreController storeController;
@@ -71,6 +72,7 @@ public class ShopScript : MonoBehaviour , IStoreListener
         {
             Debug.Log("ShopScript: Products initialized successfully.");
             CheckNonConsumable(ncItem.Id);
+            receiptChecked = true;
         }
         else
         {
@@ -120,17 +122,27 @@ public class ShopScript : MonoBehaviour , IStoreListener
 
     }
 
-   
+   void Awake()
+    {
+        if (PlayerPrefs.HasKey("showAds"))
+        {
+            int adsPref = PlayerPrefs.GetInt("showAds");
+            if (adsPref == 0)
+                nonConsumableBtn.gameObject.SetActive(false);
+        }
+    }
+
     void Start()
     {
         SetupBuilder();
-        int coins = PlayerPrefs.GetInt("totalCoins");
+        int coins = PlayerPrefs.GetInt("totalCoins",0);
         coinTxt.text = coins.ToString();
     }
-    //void Update()
-    //{
-    //    nonConsumableBtn.gameObject.SetActive(showAds);
-    //}
+    void Update()
+    {
+        if(!showAds)
+            PlayerManager.Instance.showAds = false;
+    }
     public void OnInitializeFailed(InitializationFailureReason error)
     {
         Debug.LogError("ShopScript: OnInitializeFailed called with error: " + error);
@@ -162,12 +174,16 @@ public class ShopScript : MonoBehaviour , IStoreListener
         nonConsumableBtn.gameObject.SetActive(false);
         showAds = false;
         PlayerManager.Instance.showAds = false; // Update PlayerManager to reflect ad removal
+        PlayerManager.Instance.adsRemoved = true;
+        PlayerPrefs.SetInt("showAds", 0);
         Debug.Log("Ads removed");
     }
     void ShowAds()
     {
         showAds = true;
         PlayerManager.Instance.showAds = true; // Update PlayerManager to reflect ad showing
+        PlayerManager.Instance.adsRemoved = false;
+        PlayerPrefs.SetInt("showAds", 1);
         Debug.Log("Ads shown");
     }
 

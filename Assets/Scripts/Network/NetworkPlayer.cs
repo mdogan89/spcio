@@ -116,6 +116,14 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
         }
         Runner.SetPlayerObject(Object.InputAuthority, Object);
         //Debug.Log("NetworkPlayer Spawned with InputAuthority: " + Object.InputAuthority + " " + Object.Id);
+        if (_meshRenderer != null)
+        {
+            // Her bot için ayrı materyal örneği oluştur
+            _instanceMaterial = new Material(_meshRenderer.sharedMaterial);
+            _meshRenderer.material = _instanceMaterial;
+        }
+        if (HasStateAuthority && !isBot)
+            _meshRenderer.material = PlayerManager.Instance.skins[PlayerManager.Instance.skinId];
         if (HasInputAuthority && !isBot)
         {
             inputManager = Runner.GetComponent<NetworkInputManager>();
@@ -128,19 +136,23 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
             absorbAudioSource.volume = PlayerManager.Instance.volume;
             deathAudioSource.volume = PlayerManager.Instance.volume;
             
-            //ChangeSkin(PlayerManager.Instance.skinId);
-            _meshRenderer.material = PlayerManager.Instance.skins[PlayerManager.Instance.skinId];
-            _meshRenderer.material.color = Color.white;
-            if (PlayerManager.Instance.skinId == 3)
+            ChangeSkin(PlayerManager.Instance.skinId);
+            UpdateSkin(skinId);
+            //_meshRenderer.material.color = Color.white;
+            if (PlayerManager.Instance.skinId == 3 || skinId == 3)
                 ChangeColor(UnityEngine.Random.ColorHSV(0f, 1f, 0.7f, 1f, 0.5f, 1f));
+            else {
+                ChangeColor(Color.white);
+                Debug.Log("Player skinId: " + PlayerManager.Instance.skinId + nickName);
         }
-        if (_meshRenderer != null && isBot)
-        {
-            // Her bot için ayrı materyal örneği oluştur
-            _instanceMaterial = new Material(_meshRenderer.sharedMaterial);
-            _meshRenderer.material = _instanceMaterial;
         }
-        if (Object.HasStateAuthority && isBot)
+       
+        if(!isBot && HasStateAuthority)
+            ChangeColor(UnityEngine.Random.ColorHSV(0f,1f,0.7f,1f,0.5f,1f));
+
+
+
+        if (Object.HasStateAuthority &&isBot)
         {
             skinId = 3; // Set skinId to 3 for bots
             ChangeColor(UnityEngine.Random.ColorHSV(0f, 1f, 0.7f, 1f, 0.5f, 1f));
@@ -159,11 +171,12 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
 
     public override void FixedUpdateNetwork()
     {
-        //if (!isBot) { 
-        //if(PlayerManager.Instance.skinId == 3)
-        //    _meshRenderer.material.color = spriteColor;
+        //if (!isBot)
+        //{
+        //    if (PlayerManager.Instance.skinId == 3 || skinId == 3)
+        //        _meshRenderer.material.color = spriteColor;
         //}
-    
+
 
         //Movement **check if player inside the game area**
         if (GetInput(out NetInput netInput))
@@ -262,6 +275,8 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
             }
         }
 
+        
+        UpdateSkin(skinId);
         UpdateColor(spriteColor); // Render'da rengi güncelle
         if (isBot)
             joysticks.gameObject.SetActive(false);
@@ -344,7 +359,7 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
         if (other.GetComponent<NetworkPlayer>() && HasInputAuthority && other.GetComponent<NetworkPlayer>().size > size && !isBot)
         {
             deathAudioSource.Play();
-            if (PlayerManager.Instance.showAds)
+            if (PlayerManager.Instance.showAds && !PlayerManager.Instance.adsRemoved)
                 adSample.ShowInterstitialAd();
             //inGameUIHandler.joinGameCanvas.gameObject.SetActive(true);
         }
@@ -437,17 +452,33 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
     {
         if (!Object.HasStateAuthority) return;
         skinId = newSkinId;
-        if (_meshRenderer != null && PlayerManager.Instance.skins != null && PlayerManager.Instance.skins.Length > skinId)
-        {
-            //List<Material> playerMaterial = new List<Material>() { PlayerManager.Instance.skins[PlayerManager.Instance.skinId] }; // Create a list to hold the map materials
-            //_meshRenderer.SetMaterials(playerMaterial); // Set the player's material based on the selected skin ID
-            _meshRenderer.material = PlayerManager.Instance.skins[skinId];
-        }
+ 
     }
 
+    void OnSkinIdChanged(int newSkinId)
+    {
+        UpdateSkin(newSkinId);
+    }
 
-
-
+    void UpdateSkin(int skinId)
+    {
+        if (_meshRenderer != null && PlayerManager.Instance.skins.Count() > skinId)
+        {
+            if (isBot)
+            {
+                // Her bot için ayrı materyal örneği oluştur
+                if (_instanceMaterial == null)
+                {
+                    _instanceMaterial = new Material(PlayerManager.Instance.skins[3]);
+                    _meshRenderer.material = _instanceMaterial;
+                }
+            }
+            else
+            {
+                _meshRenderer.material = PlayerManager.Instance.skins[skinId];
+            }
+        }
+    }
 
     public void ChangeColor(Color newColor)
     {
@@ -457,6 +488,8 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
 
     private void UpdateColor(Color color)
     {
+        if(!isBot)
+            _meshRenderer.material.color = color;
         if (_meshRenderer != null && _instanceMaterial != null)
         {
             _instanceMaterial.color = color;
@@ -566,7 +599,7 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
         playerState = PlayerState.dead;
         if (!isBot)
         {
-            if(PlayerManager.Instance.showAds)
+            if(PlayerManager.Instance.showAds && !PlayerManager.Instance.adsRemoved)
                 adSample.ShowInterstitialAd();
             Debug.Log(nickName + "Player is not bot, showing ads" + PlayerManager.Instance.showAds);
             inGameUIHandler.OnPlayerDied();
@@ -597,7 +630,7 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
             if (playerState == PlayerState.dead && Object.HasInputAuthority &&!isBot)
             {
                 deathAudioSource.Play();
-                 if(PlayerManager.Instance.showAds)
+                 if(PlayerManager.Instance.showAds && !PlayerManager.Instance.adsRemoved)
                  adSample.ShowInterstitialAd();
                 Debug.Log("Not bot player is dead, showing join game canvas" + playerState);
                 inGameUIHandler.OnPlayerDied();
@@ -668,7 +701,10 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
                 case nameof(playerState):
                     OnPlayerStateChanged();
                     break;  
-                }
+                case nameof(skinId):
+                    OnSkinIdChanged(skinId);
+                    break;
+            }
             }
         
     }
