@@ -61,10 +61,13 @@ public class InterstitialAdSample : MonoBehaviour
     public void ShowInterstitialAd()
     {
         //Show InterstitialAd, check if the ad is ready before showing
-        if (interstitialAd.IsAdReady())
+        if (!interstitialAd.IsAdReady())
         {
-            interstitialAd.ShowAd();
+            Debug.Log("Interstitial ad not ready");
+            LoadInterstitialAd();
         }
+        else
+        interstitialAd.ShowAd();
     }
 
     //Implement InterstitialAd events

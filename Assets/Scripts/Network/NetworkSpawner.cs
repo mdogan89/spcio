@@ -169,6 +169,12 @@ public class NetworkSpawner : SimulationBehaviour, INetworkRunnerCallbacks
             ClearNetworkArray();
             UpdatePlayerNetworkArray();
             Debug.Log("OnPlayerJoined called from NetworkSpawner for: " + player + " " + spawnedNetworkPlayer.nickName + DateTime.Now.ToString());
+
+            foreach (var p in Players)
+            {
+                p.skinIdChanged = true;
+                p.PlayerJoined();
+            }
         }
     }
 
@@ -212,13 +218,12 @@ public class NetworkSpawner : SimulationBehaviour, INetworkRunnerCallbacks
                     Mathf.Round(player.transform.position.z)
                 );
                 if (NetworkPlayerList.Instance.PlayerPositions.ContainsKey(roundedPosition)) { 
-                    NetworkPlayerList.Instance.PlayerPositions.Remove(roundedPosition);
+                        NetworkPlayerList.Instance.PlayerPositions.Remove(roundedPosition);
                 }
-                NetworkPlayerList.Instance.PlayerPositions.Add(roundedPosition, player.size);
+                    NetworkPlayerList.Instance.PlayerPositions.Add(roundedPosition, player.size);
+                }
             }
         }
-    }
-
     public void OnInput(NetworkRunner runner, NetworkInput input)
     {
 
@@ -236,6 +241,14 @@ public class NetworkSpawner : SimulationBehaviour, INetworkRunnerCallbacks
     {
         if (runner.IsServer)
         {
+#if UNITY_SERVER
+            MultiplayServerHostingHandler.instance.SetCurrentNumberOfPlayers((ushort)runner.ActivePlayers.Count());
+#endif
+            if (runner.ActivePlayers.Count() < Utils.GetMaxPlayersFromStartupArgs())
+            {
+                runner.SessionInfo.IsOpen = true;
+            }
+
             NetworkPlayer leavingPlayer = Players.Find(p => p != null && p.Object != null && p.Object.InputAuthority == player);
             Debug.Log($"Player {player} left. Updating arrays..." + leavingPlayer.nickName + DateTime.Now);
 
@@ -341,5 +354,13 @@ public class NetworkSpawner : SimulationBehaviour, INetworkRunnerCallbacks
     public void OnReliableDataProgress(NetworkRunner runner, PlayerRef player, ReliableKey key, float progress)
     {
         Debug.Log("OnReliableDataProgress");
+    }
+
+    private void LogNetworkStats() {
+        if (Runner != null && Runner.IsServer) {
+            Debug.Log($"Active Players: {Runner.ActivePlayers.Count()}, " +
+                      $"Bots: {botList.Count}, " +
+                      $"Network Objects: {Runner.SimulationUnityScene.GetComponents<NetworkObject>(true).Length}");
+        }
     }
 }

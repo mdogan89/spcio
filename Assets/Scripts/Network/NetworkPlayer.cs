@@ -8,7 +8,7 @@ using UnityEngine;
 public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
 {
     [Networked]
-    public PlayerState playerState { get => default; set { } }
+    public PlayerState playerState { get; set; }
     public enum PlayerState
     {
         pendingConnect,
@@ -27,7 +27,7 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
     [Networked]
     public Color spriteColor { get; set; }
     [Networked]
-    public bool isBot { get => default; set { } }
+    public bool isBot { get; set; }
     [Networked]
     public bool isMoving { get; set; }
     [SerializeField] Transform camTarget;
@@ -63,6 +63,15 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
 
     [Networked]
     public int skinId { get ; set; }
+    [Networked]
+    public bool skinIdChanged { get; set; }
+    bool colorChanged = false;
+
+    public Material renderMaterial;
+
+    [SerializeField] 
+    private List<Material> skinMaterials;  // Prefab'da atayın
+    private Material _currentMaterial;
 
     void Awake()
     {
@@ -102,6 +111,7 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
         inputDirection = new Vector2(UnityEngine.Random.Range(-1f, 1f), UnityEngine.Random.Range(-1f, 1f));
         Reset();
         UpdateSize();
+        //UpdateSkin(PlayerManager.Instance.skinId);
     }
 
     public override void Spawned()
@@ -115,6 +125,7 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
             ResetPlayer();
         }
         Runner.SetPlayerObject(Object.InputAuthority, Object);
+        Runner.SetIsSimulated(Object, true);
         //Debug.Log("NetworkPlayer Spawned with InputAuthority: " + Object.InputAuthority + " " + Object.Id);
         if (_meshRenderer != null)
         {
@@ -122,8 +133,21 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
             _instanceMaterial = new Material(_meshRenderer.sharedMaterial);
             _meshRenderer.material = _instanceMaterial;
         }
-        if (HasStateAuthority && !isBot)
-            _meshRenderer.material = PlayerManager.Instance.skins[PlayerManager.Instance.skinId];
+  
+        if (Object.HasStateAuthority)
+        {
+            if (isBot)
+            {
+                skinId = 3;
+            }
+            else if (HasInputAuthority)
+            {
+                skinId = PlayerManager.Instance.skinId;
+            }
+            skinIdChanged = true;
+            UpdateSkin(skinId);
+        }
+        
         if (HasInputAuthority && !isBot)
         {
             inputManager = Runner.GetComponent<NetworkInputManager>();
@@ -138,27 +162,25 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
             
             ChangeSkin(PlayerManager.Instance.skinId);
             UpdateSkin(skinId);
+            skinIdChanged = true;
+
             //_meshRenderer.material.color = Color.white;
             if (PlayerManager.Instance.skinId == 3 || skinId == 3)
                 ChangeColor(UnityEngine.Random.ColorHSV(0f, 1f, 0.7f, 1f, 0.5f, 1f));
             else {
                 ChangeColor(Color.white);
                 Debug.Log("Player skinId: " + PlayerManager.Instance.skinId + nickName);
-        }
+            }
+            colorChanged = true;
         }
        
-        if(!isBot && HasStateAuthority)
+        if(isBot && HasStateAuthority)
             ChangeColor(UnityEngine.Random.ColorHSV(0f,1f,0.7f,1f,0.5f,1f));
 
 
-
-        if (Object.HasStateAuthority &&isBot)
-        {
-            skinId = 3; // Set skinId to 3 for bots
-            ChangeColor(UnityEngine.Random.ColorHSV(0f, 1f, 0.7f, 1f, 0.5f, 1f));
-        }
         
         UpdateColor(spriteColor);
+        colorChanged = true;
 
         if ((HasInputAuthority && !isBot)||HasStateAuthority )
             inGameUIHandler = FindObjectOfType<InGameUIHandler>();
@@ -171,13 +193,6 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
 
     public override void FixedUpdateNetwork()
     {
-        //if (!isBot)
-        //{
-        //    if (PlayerManager.Instance.skinId == 3 || skinId == 3)
-        //        _meshRenderer.material.color = spriteColor;
-        //}
-
-
         //Movement **check if player inside the game area**
         if (GetInput(out NetInput netInput))
         {
@@ -275,12 +290,21 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
             }
         }
 
-        
-        UpdateSkin(skinId);
-        UpdateColor(spriteColor); // Render'da rengi güncelle
+        if (!isBot)
+        {
+            UpdateColor(spriteColor); // Render'da rengi güncelle
+            colorChanged = false;
+        }
+        if (skinIdChanged)
+        {
+            UpdateSkin(skinId);
+            skinIdChanged = false;
+        }
         if (isBot)
             joysticks.gameObject.SetActive(false);
-    
+
+
+
         if (playerState != PlayerState.playing)
         {
             _meshRenderer.enabled = false;
@@ -358,9 +382,9 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
         
         if (other.GetComponent<NetworkPlayer>() && HasInputAuthority && other.GetComponent<NetworkPlayer>().size > size && !isBot)
         {
-            deathAudioSource.Play();
-            if (PlayerManager.Instance.showAds && !PlayerManager.Instance.adsRemoved)
-                adSample.ShowInterstitialAd();
+            //deathAudioSource.Play();
+            //if (PlayerManager.Instance.showAds && !PlayerManager.Instance.adsRemoved)
+            //    adSample.ShowInterstitialAd();
             //inGameUIHandler.joinGameCanvas.gameObject.SetActive(true);
         }
         else if (other.GetComponent<NetworkPlayer>() && other.GetComponent<NetworkPlayer>().size < size)
@@ -421,17 +445,12 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
     }
     List<Vector3> GetFoodList()
     {
-        var foods = GameObject.FindGameObjectsWithTag("Cell");
+            var foods = GameObject.FindGameObjectsWithTag("Cell");
         if (foods == null || foods.Length == 0) return new List<Vector3>();
         return foods.Select(f => f.transform.position)
-                    .OrderBy(pos => Vector3.Distance(transform.position, pos))
-                    .ToList();
-    }
-
-
-
-
-    
+                             .OrderBy(pos => Vector3.Distance(transform.position, pos))
+                             .ToList();
+        }
 
     public void PlayerLeft(PlayerRef player)
     {
@@ -442,41 +461,74 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
 
         }
 
+    public void PlayerJoined()
+    {
+        UpdateSkin(skinId);
+    }
+
+
+
+
+        void OnSkinIdChanged(int newSkinId)
+    {
+        Debug.Log($"OnSkinIdChanged called for {nickName}: {newSkinId}");
+        UpdateSkin(newSkinId);
+        skinIdChanged = true;
+    }
+
+
+
     public void ChangeSkin(int newSkinId)
     {
-        RPC_ChangeSkin(newSkinId);
+        // StateAuthority'ye RPC gönder
+        if (Object.HasInputAuthority)
+        {
+            RPC_ChangeSkin(newSkinId);
+        }
     }
 
-    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
     void RPC_ChangeSkin(int newSkinId, RpcInfo info = default)
     {
-        if (!Object.HasStateAuthority) return;
+        // StateAuthority'de skinId'yi güncelle ve tüm istemcilere bildir
         skinId = newSkinId;
- 
-    }
-
-    void OnSkinIdChanged(int newSkinId)
-    {
         UpdateSkin(newSkinId);
     }
 
-    void UpdateSkin(int skinId)
+
+
+    void UpdateSkin(int newSkinId)
     {
-        if (_meshRenderer != null && PlayerManager.Instance.skins.Count() > skinId)
+        if (_meshRenderer == null)
         {
-            if (isBot)
+            Debug.LogWarning($"[Skin] MeshRenderer null for {nickName}");
+            return;
+        }
+
+        try
+        {
+            // Güvenli indeks kontrolü
+            int safeIndex = Mathf.Clamp(newSkinId, 0, skinMaterials.Count - 1);
+            Material sourceMaterial = isBot ? skinMaterials[3] : skinMaterials[safeIndex];
+
+            // Eğer materyal değişmediyse işlem yapmayın
+            if (_currentMaterial != null && _currentMaterial.name == sourceMaterial.name)
             {
-                // Her bot için ayrı materyal örneği oluştur
-                if (_instanceMaterial == null)
-                {
-                    _instanceMaterial = new Material(PlayerManager.Instance.skins[3]);
-                    _meshRenderer.material = _instanceMaterial;
-                }
+                return;
             }
-            else
+
+            // Her zaman yeni bir materyal örneği oluşturun
+            if (_currentMaterial == null || _currentMaterial.name != sourceMaterial.name)
             {
-                _meshRenderer.material = PlayerManager.Instance.skins[skinId];
+                _currentMaterial = new Material(sourceMaterial);
+                _meshRenderer.material = _currentMaterial;
             }
+
+            Debug.Log($"[Skin] Updated for {nickName} (Object {Object.Id}): skinId={newSkinId}, material={_currentMaterial.name}");
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"[Skin] Error updating skin for {nickName}: {e.Message}");
         }
     }
 
@@ -488,9 +540,9 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
 
     private void UpdateColor(Color color)
     {
-        if(!isBot)
+        if(!isBot && _meshRenderer.material.color != color)
             _meshRenderer.material.color = color;
-        if (_meshRenderer != null && _instanceMaterial != null)
+        else if (_meshRenderer != null && _instanceMaterial != null && isBot)
         {
             _instanceMaterial.color = color;
             _propBlock.SetColor("_Color", color);
@@ -560,7 +612,13 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
     public void JoinGame(string nickname)
     {
             Debug.Log($"JoinGame called with nickname: {nickname}");
-            RPC_JoinGame(nickname);
+
+        if (PlayerManager.Instance.showAds && !PlayerManager.Instance.adsRemoved)
+            adSample.LoadInterstitialAd();
+
+
+
+        RPC_JoinGame(nickname);
     }
 
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
@@ -599,9 +657,9 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
         playerState = PlayerState.dead;
         if (!isBot)
         {
-            if(PlayerManager.Instance.showAds && !PlayerManager.Instance.adsRemoved)
-                adSample.ShowInterstitialAd();
-            Debug.Log(nickName + "Player is not bot, showing ads" + PlayerManager.Instance.showAds);
+            //if (PlayerManager.Instance.showAds && !PlayerManager.Instance.adsRemoved)
+            //    adSample.ShowInterstitialAd();
+            //Debug.Log(nickName + "Player is not bot, showing ads" + PlayerManager.Instance.showAds);
             inGameUIHandler.OnPlayerDied();
         }
         if (isBot)
@@ -630,9 +688,9 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
             if (playerState == PlayerState.dead && Object.HasInputAuthority &&!isBot)
             {
                 deathAudioSource.Play();
-                 if(PlayerManager.Instance.showAds && !PlayerManager.Instance.adsRemoved)
-                 adSample.ShowInterstitialAd();
-                Debug.Log("Not bot player is dead, showing join game canvas" + playerState);
+                if (PlayerManager.Instance.showAds && !PlayerManager.Instance.adsRemoved)
+                    adSample.ShowInterstitialAd();
+                Debug.Log("Not bot player is dead, ads" + PlayerManager.Instance.showAds);
                 inGameUIHandler.OnPlayerDied();
             }
         }
@@ -680,6 +738,9 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
             speed = 5;
             transform.localScale = Vector3.one;
             hasTarget = false;
+            if(!isBot&&skinId ==3)
+                spriteColor = UnityEngine.Random.ColorHSV(0f, 1f, 0.7f, 1f, 0.5f, 1f);
+            UpdateSkin(skinId);
     }
     private void CheckStateChanges()
     {
@@ -702,7 +763,9 @@ public class NetworkPlayer : NetworkBehaviour, IPlayerLeft
                     OnPlayerStateChanged();
                     break;  
                 case nameof(skinId):
-                    OnSkinIdChanged(skinId);
+                    Debug.Log($"SkinId changed for {nickName}: {skinId}");
+                    skinIdChanged = true;
+                    OnSkinIdChanged(skinId); // hemen uygulamaya çalış
                     break;
             }
             }

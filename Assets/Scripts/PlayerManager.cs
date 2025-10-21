@@ -156,13 +156,13 @@ public class PlayerManager : MonoBehaviour
     }
     void Update()
     {
-        if(!dailyPotionShowed && SceneManager.GetActiveScene().buildIndex == 0 && !adsRemoved && ShopScript.receiptChecked)
+        if (!dailyPotionShowed && SceneManager.GetActiveScene().buildIndex == 0 && !adsRemoved && ShopScript.receiptChecked)
         {
             SetDailyPotion();
             dailyPotionShowed = true;
             PlayerPrefs.SetInt("dailyPotionShowed", 1);
         }
-        else if(SceneManager.GetActiveScene().buildIndex == 0 && adsRemoved && ShopScript.receiptChecked)
+        else if (SceneManager.GetActiveScene().buildIndex == 0 && adsRemoved && ShopScript.receiptChecked)
         {
             dailyPotionParent.SetActive(false);
             dailyPotionShowed = true;
@@ -214,7 +214,8 @@ public class PlayerManager : MonoBehaviour
 
         if (potionTimer > 0)
         {
-            if (dailyPotionActivated) { 
+            if (dailyPotionActivated)
+            {
                 dailyPotionActiveButton.GetComponentInChildren<TextMeshProUGUI>().text = "Activated(" + potionTimer.ToString("F0") + "s)";
                 dailyPotionActiveButton.interactable = false;
             }
@@ -223,7 +224,7 @@ public class PlayerManager : MonoBehaviour
         }
         else if (potionTimer <= 0)
         {
-            if(dailyPotionActivated)
+            if (dailyPotionActivated)
             {
                 dailyPotionActiveButton.GetComponentInChildren<TextMeshProUGUI>().text = "Ended";
                 dailyPotionActivated = false;
@@ -234,10 +235,11 @@ public class PlayerManager : MonoBehaviour
             showAds = true;
             potionTimer = 0;
         }
-        else if (potionTimer <= 0 )
+        else if (potionTimer <= 0)
         {
-            if ( SceneManager.GetActiveScene().buildIndex == 0 && !dailyPotionActivated ) { 
-            dailyPotionActiveButton.GetComponentInChildren<TextMeshProUGUI>().text = "Activate";
+            if (SceneManager.GetActiveScene().buildIndex == 0 && !dailyPotionActivated)
+            {
+                dailyPotionActiveButton.GetComponentInChildren<TextMeshProUGUI>().text = "Activate";
             }
             potionTimer = 0;
             showAds = true;

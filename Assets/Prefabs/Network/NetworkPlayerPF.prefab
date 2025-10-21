@@ -1110,36 +1110,44 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e053ad74da7f4a24f8bca1f523f9ccf5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  camTarget: {fileID: 7876167100041334854}
-  lookSensitivity: 30
-  _speed: 0
-  playerNickNameTM: {fileID: 6929515202532738502}
-  scoreText: {fileID: 8509772654111024560}
-  playerSpriteRenderer: {fileID: 6552733850304053070}
+  _playerState: 0
   _nickName:
     _length: 0
     _data:
       Data: 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-  _playerState: 0
-  _rigidbody: {fileID: 8889421458142389522}
-  _collider: {fileID: 3757382215682977154}
-  _spriteColor: {r: 0, g: 0, b: 0, a: 0}
   _size: 0
+  _speed: 0
+  _spriteColor: {r: 0, g: 0, b: 0, a: 0}
   _isBot: 0
-  inputDirection: {x: 0, y: 0}
-  inputLook: {x: 0, y: 0}
-  aiTarget: {x: 0, y: 0, z: 0}
-  hasTarget: 0
-  _particleSystem: {fileID: 820119236681339963}
   _isMoving: 0
+  camTarget: {fileID: 7876167100041334854}
+  lookSensitivity: 30
+  playerNickNameTM: {fileID: 6929515202532738502}
+  scoreText: {fileID: 8509772654111024560}
+  _collider: {fileID: 3757382215682977154}
   moveAudioSource: {fileID: 1596164148835348887}
-  _meshRenderer: {fileID: 6552733850304053070}
   joysticks: {fileID: 2364496864885771960}
   nickScoreCanvas: {fileID: 6353149309474081008}
   foodAudioSource: {fileID: 873085697885326282}
   absorbAudioSource: {fileID: -4859259499053516618}
   deathAudioSource: {fileID: -4294662095222876582}
   _animator: {fileID: 3283370086890609683}
+  _rigidbody: {fileID: 8889421458142389522}
+  _particleSystem: {fileID: 820119236681339963}
+  _meshRenderer: {fileID: 6552733850304053070}
+  inputDirection: {x: 0, y: 0}
+  inputLook: {x: 0, y: 0}
+  aiTarget: {x: 0, y: 0, z: 0}
+  hasTarget: 0
+  enableSpriteRenderer: 1
+  _skinId: 0
+  _skinIdChanged: 0
+  renderMaterial: {fileID: 0}
+  skinMaterials:
+  - {fileID: 2100000, guid: 2ae122b477971bb44a80b92678821ab3, type: 2}
+  - {fileID: 2100000, guid: 053fa0c86b03be449bd117d80d1eb19c, type: 2}
+  - {fileID: 2100000, guid: 35978e42daa629f4cb8d64534cb875d2, type: 2}
+  - {fileID: 2100000, guid: a970f7c7e0ff54343b836de84b927fb7, type: 2}
 --- !u!33 &6031028831166485153
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -1168,6 +1176,8 @@ MeshRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -1189,6 +1199,7 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
@@ -1314,7 +1325,7 @@ AudioSource:
   m_Enabled: 1
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
-  m_audioClip: {fileID: 8300000, guid: cd51eda7130aa8443be5734aaf9c2b67, type: 3}
+  m_audioClip: {fileID: 0}
   m_Resource: {fileID: 8300000, guid: cd51eda7130aa8443be5734aaf9c2b67, type: 3}
   m_PlayOnAwake: 0
   m_Volume: 1
@@ -1411,7 +1422,7 @@ AudioSource:
   m_Enabled: 1
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
-  m_audioClip: {fileID: 8300000, guid: 7465ef9c7517dec429176f9c5bb7ac4d, type: 3}
+  m_audioClip: {fileID: 0}
   m_Resource: {fileID: 8300000, guid: 7465ef9c7517dec429176f9c5bb7ac4d, type: 3}
   m_PlayOnAwake: 0
   m_Volume: 1
@@ -1508,7 +1519,7 @@ AudioSource:
   m_Enabled: 1
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
-  m_audioClip: {fileID: 8300000, guid: 2ae5b6ea0a476bf4ebeffbdaaa62da96, type: 3}
+  m_audioClip: {fileID: 0}
   m_Resource: {fileID: 8300000, guid: 2ae5b6ea0a476bf4ebeffbdaaa62da96, type: 3}
   m_PlayOnAwake: 0
   m_Volume: 1
@@ -1605,7 +1616,7 @@ AudioSource:
   m_Enabled: 1
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
-  m_audioClip: {fileID: 8300000, guid: 6fa1f04ff2d9a624b8daca0217e03f3c, type: 3}
+  m_audioClip: {fileID: 0}
   m_Resource: {fileID: 8300000, guid: 6fa1f04ff2d9a624b8daca0217e03f3c, type: 3}
   m_PlayOnAwake: 0
   m_Volume: 1

@@ -105,13 +105,14 @@ public class InGameUIHandler : MonoBehaviour
         }
     }
     public void SetStatusText() {
-        if (NetworkPlayer.Local != null) {
+        if (NetworkPlayer.Local != null)
+        {
             statusText.text = NetworkPlayer.Local.playerState.ToString();
             statusText.gameObject.SetActive(true);
         }
         else
         {
-            statusText.text = "Waiting for connection...";
+        statusText.text = "Waiting for connection...";
             statusText.gameObject.SetActive(true);
         }
     }

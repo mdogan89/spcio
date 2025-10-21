@@ -42,144 +42,146 @@ public class ShopManager : MonoBehaviour
 
     void Start()
     {
-        OnPotionsButtonClicked();
+        if (SceneManager.GetActiveScene().buildIndex == 0)
+            OnPotionsButtonClicked();
         //PlayerPrefs.SetInt("totalCoins", 500); // For testing purposes, set initial coins
     }
 
     void Update()
     {
-        if (!ShopScript.showAds)
+        if (SceneManager.GetActiveScene().buildIndex == 0)
         {
-            smallPotionBuyButton.interactable = false;
-            mediumPotionBuyButton.interactable = false;
-            bigPotionBuyButton.interactable = false;
-
-            smallPotionsInputField.interactable = false;
-            mediumPotionsInputField.interactable = false;
-            bigPotionsInputField.interactable = false;
-
-            smallPotionToggle.interactable = false;
-            mediumPotionToggle.interactable = false;
-            bigPotionToggle.interactable = false;
-            explanationTxt.text = "You have already removed ads. Thank you for your support!";
-        }
-        else
-        {
-            smallPotionBuyButton.interactable = true;
-            mediumPotionBuyButton.interactable = true;
-            bigPotionBuyButton.interactable = true;
-            smallPotionsInputField.interactable = true;
-            mediumPotionsInputField.interactable = true;
-            bigPotionsInputField.interactable = true;
-            smallPotionToggle.interactable = true;
-            mediumPotionToggle.interactable = true;
-            bigPotionToggle.interactable = true;
-            explanationTxt.text = "Potions remove ads for a limited time.";
-        }
-
-
-
-
-
-
-        totalCoins = PlayerPrefs.GetInt("totalCoins", 0);
-        totalCoinsText.text = totalCoins.ToString();
-        smallPotionsText.text = PlayerPrefs.GetInt("smallPotions", 0).ToString();
-        mediumPotionsText.text = PlayerPrefs.GetInt("mediumPotions", 0).ToString();
-        bigPotionsText.text = PlayerPrefs.GetInt("bigPotions", 0).ToString();
-
-        if (PlayerManager.Instance.potionTimer > 0)
-        {
-            PlayerManager.Instance.potionTimer -= Time.deltaTime;
-            if (SceneManager.GetActiveScene().buildIndex == 0)
+            if (!ShopScript.showAds)
             {
-                if (smallPotionToggle.isOn)
-                    smallPotionToggle.GetComponentInChildren<TextMeshProUGUI>().text = "Activated\n" + PlayerManager.Instance.potionTimer.ToString("F0") + "s";
-                if (mediumPotionToggle.isOn)
-                    mediumPotionToggle.GetComponentInChildren<TextMeshProUGUI>().text = "Activated\n" + PlayerManager.Instance.potionTimer.ToString("F0") + "s";
-                if (bigPotionToggle.isOn)
-                    bigPotionToggle.GetComponentInChildren<TextMeshProUGUI>().text = "Activated\n" + PlayerManager.Instance.potionTimer.ToString("F0") + "s";
+                smallPotionBuyButton.interactable = false;
+                mediumPotionBuyButton.interactable = false;
+                bigPotionBuyButton.interactable = false;
+
+                smallPotionsInputField.interactable = false;
+                mediumPotionsInputField.interactable = false;
+                bigPotionsInputField.interactable = false;
+
                 smallPotionToggle.interactable = false;
                 mediumPotionToggle.interactable = false;
                 bigPotionToggle.interactable = false;
+                explanationTxt.text = "You have already removed ads. Thank you for your support!";
             }
-            PlayerManager.Instance.showAds = false;
-        }
-        else
-        {
-            if (SceneManager.GetActiveScene().buildIndex == 0)
+            else
             {
-                smallPotionToggle.GetComponentInChildren<TextMeshProUGUI>().text = "Activate";
-                mediumPotionToggle.GetComponentInChildren<TextMeshProUGUI>().text = "Activate";
-                bigPotionToggle.GetComponentInChildren<TextMeshProUGUI>().text = "Activate";
-                smallPotionToggle.isOn = false;
-                mediumPotionToggle.isOn = false;
-                bigPotionToggle.isOn = false;
+                smallPotionBuyButton.interactable = true;
+                mediumPotionBuyButton.interactable = true;
+                bigPotionBuyButton.interactable = true;
+                smallPotionsInputField.interactable = true;
+                mediumPotionsInputField.interactable = true;
+                bigPotionsInputField.interactable = true;
                 smallPotionToggle.interactable = true;
                 mediumPotionToggle.interactable = true;
                 bigPotionToggle.interactable = true;
+                explanationTxt.text = "Potions remove ads for a limited time.";
             }
-            PlayerManager.Instance.potionTimer = 0f;
-            PlayerManager.Instance.showAds = true;
+
+            totalCoins = PlayerPrefs.GetInt("totalCoins", 0);
+            totalCoinsText.text = totalCoins.ToString();
+            smallPotionsText.text = PlayerPrefs.GetInt("smallPotions", 0).ToString();
+            mediumPotionsText.text = PlayerPrefs.GetInt("mediumPotions", 0).ToString();
+            bigPotionsText.text = PlayerPrefs.GetInt("bigPotions", 0).ToString();
+
+            if (PlayerManager.Instance.potionTimer > 0)
+            {
+                PlayerManager.Instance.potionTimer -= Time.deltaTime;
+
+                    if (smallPotionToggle.isOn)
+                        smallPotionToggle.GetComponentInChildren<TextMeshProUGUI>().text = "Activated\n" + PlayerManager.Instance.potionTimer.ToString("F0") + "s";
+                    if (mediumPotionToggle.isOn)
+                        mediumPotionToggle.GetComponentInChildren<TextMeshProUGUI>().text = "Activated\n" + PlayerManager.Instance.potionTimer.ToString("F0") + "s";
+                    if (bigPotionToggle.isOn)
+                        bigPotionToggle.GetComponentInChildren<TextMeshProUGUI>().text = "Activated\n" + PlayerManager.Instance.potionTimer.ToString("F0") + "s";
+                    smallPotionToggle.interactable = false;
+                    mediumPotionToggle.interactable = false;
+                    bigPotionToggle.interactable = false;
+                
+                PlayerManager.Instance.showAds = false;
+            }
+            else
+            {
+           
+                    smallPotionToggle.GetComponentInChildren<TextMeshProUGUI>().text = "Activate";
+                    mediumPotionToggle.GetComponentInChildren<TextMeshProUGUI>().text = "Activate";
+                    bigPotionToggle.GetComponentInChildren<TextMeshProUGUI>().text = "Activate";
+                    smallPotionToggle.isOn = false;
+                    mediumPotionToggle.isOn = false;
+                    bigPotionToggle.isOn = false;
+                    smallPotionToggle.interactable = true;
+                    mediumPotionToggle.interactable = true;
+                    bigPotionToggle.interactable = true;
+                
+                PlayerManager.Instance.potionTimer = 0f;
+                PlayerManager.Instance.showAds = true;
+            }
+
+            if (PlayerPrefs.GetInt("earthSkin", 0) == 1)
+            {
+                earthToggle.interactable = true;
+                earthBuyButton.interactable = false;
+                earthBuyButton.GetComponentInChildren<TextMeshProUGUI>().text = "Owned";
+            }
+            else
+            {
+                earthToggle.isOn = false;
+                earthToggle.interactable = false;
+            }
+
+            if (PlayerPrefs.GetInt("moonSkin", 0) == 1)
+            {
+                moonToggle.interactable = true;
+                moonBuyButton.interactable = false;
+                moonBuyButton.GetComponentInChildren<TextMeshProUGUI>().text = "Owned";
+            }
+            else
+            {
+                moonToggle.isOn = false;
+                moonToggle.interactable = false;
+            }
+            if (PlayerPrefs.GetInt("marsSkin", 0) == 1)
+            {
+                marsToggle.interactable = true;
+                marsBuyButton.interactable = false;
+                marsBuyButton.GetComponentInChildren<TextMeshProUGUI>().text = "Owned";
+            }
+            else
+            {
+                marsToggle.isOn = false;
+                marsToggle.interactable = false;
+            }
+
+            int skinId = PlayerManager.Instance.skinId;
+            if (skinId == 3)
+            {
+                moonToggle.isOn = false;
+                earthToggle.isOn = false;
+                marsToggle.isOn = false;
+            }
+
         }
 
-        if (PlayerPrefs.GetInt("earthSkin", 0) == 1 && SceneManager.GetActiveScene().buildIndex == 0)
-        {
-            earthToggle.interactable = true;
-            earthBuyButton.interactable = false;
-            earthBuyButton.GetComponentInChildren<TextMeshProUGUI>().text = "Owned";
+            //if(!moonToggle.isOn && !earthToggle.isOn && !marsToggle.isOn)
+            //{
+            //    PlayerManager.Instance.skinId = 3;
+            //}
         }
-        else
-        {
-            earthToggle.isOn = false;
-            earthToggle.interactable = false;
-        }
-
-        if (PlayerPrefs.GetInt("moonSkin", 0) == 1 && SceneManager.GetActiveScene().buildIndex == 0)
-        {
-            moonToggle.interactable = true;
-            moonBuyButton.interactable = false;
-            moonBuyButton.GetComponentInChildren<TextMeshProUGUI>().text = "Owned";
-        }
-        else
-        {
-            moonToggle.isOn = false;
-            moonToggle.interactable = false;
-        }
-        if (PlayerPrefs.GetInt("marsSkin", 0) == 1 && SceneManager.GetActiveScene().buildIndex == 0)
-        {
-            marsToggle.interactable = true;
-            marsBuyButton.interactable = false;
-            marsBuyButton.GetComponentInChildren<TextMeshProUGUI>().text = "Owned";
-        }
-        else
-        {
-            marsToggle.isOn = false;
-            marsToggle.interactable = false;
-        }
-
-        int skinId = PlayerManager.Instance.skinId;
-        if (skinId == 3 && SceneManager.GetActiveScene().buildIndex == 0)
-        {
-            moonToggle.isOn = false;
-            earthToggle.isOn = false;
-            marsToggle.isOn = false;
-        }
-        //if(!moonToggle.isOn && !earthToggle.isOn && !marsToggle.isOn)
-        //{
-        //    PlayerManager.Instance.skinId = 3;
-        //}
-    }
 
 
 
 
     public void OnPotionsButtonClicked()
     {
-        potionsCanvas.gameObject.SetActive(true);
-        potionsButtonTxt.color = Color.white;
-        skinsCanvas.gameObject.SetActive(false);
-        skinsButtonTxt.color = Color.black;
+        if (!potionsCanvas.activeSelf && skinsCanvas.activeSelf)
+        {
+            potionsCanvas.gameObject.SetActive(true);
+            potionsButtonTxt.color = Color.white;
+            skinsCanvas.gameObject.SetActive(false);
+            skinsButtonTxt.color = Color.black;
+        }
     }
     public void OnSkinsButtonClicked()
     {

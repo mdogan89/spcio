@@ -50,7 +50,7 @@ public class NetworkRunnerHandler : MonoBehaviour
 #endif
             int multiplayerSceneIndex2 = SceneManager.GetSceneByName("Multiplayer").buildIndex;
 
-            await InitializeNetworkRunner(networkRunner, gameMode, "TestSession", SceneManager.GetActiveScene().buildIndex, null);
+            await InitializeNetworkRunner(networkRunner, gameMode, "TestSession2", SceneManager.GetActiveScene().buildIndex, null);
             Debug.Log( gameMode + "runner initialized at scene:" + SceneManager.GetActiveScene().buildIndex);
         }
 
